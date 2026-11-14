@@ -1,0 +1,333 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ChallengeStatus {
+  DRAFT
+  ACTIVE
+  ENDED
+}
+
+model School {
+  id         String          @id @default(uuid())
+  name       String          @unique
+  region     String?
+  status     AccountStatus   @default(ACTIVE)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  users      User[]
+  classes    Class[]
+  challenges Challenge[]
+
+  @@index([status, region])
+}
+
+model User {
+  id             String            @id @default(uuid())
+  email          String            @unique
+  passwordHash   String
+  displayName    String
+  role           Role              @default(STUDENT)
+  status         AccountStatus     @default(ACTIVE)
+  tokenVersion   Int               @default(0)
+  schoolId       String?
+  school         School?           @relation(fields: [schoolId], references: [id])
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  memberships    ClassMembership[]
+  lessons        Lesson[]          @relation("LessonAuthor")
+  quizzes        Quiz[]            @relation("QuizAuthor")
+  tasks          Task[]            @relation("TaskAuthor")
+  submissions    Submission[]      @relation("SubmissionAuthor")
+  reviews        Submission[]      @relation("Reviewer")
+  attempts       QuizAttempt[]
+  ledger         PointLedger[]
+  badges         UserBadge[]
+  notifications  Notification[]
+  uploads        UploadAsset[]
+  audits         AuditLog[]
+
+  @@index([schoolId, role, status])
+}
+
+model Class {
+  id           String            @id @default(uuid())
+  schoolId     String
+  name         String
+  academicYear String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  school       School            @relation(fields: [schoolId], references: [id])
+  memberships  ClassMembership[]
+
+  @@unique([schoolId, name, academicYear])
+  @@index([schoolId])
+}
+
+model ClassMembership {
+  userId   String
+  classId  String
+  joinedAt DateTime         @default(now())
+  status   MembershipStatus @default(ACTIVE)
+  user     User             @relation(fields: [userId], references: [id])
+  class    Class            @relation(fields: [classId], references: [id])
+
+  @@id([userId, classId])
+  @@index([classId])
+}
+
+model Lesson {
+  id          String        @id @default(uuid())
+  title       String
+  body        String
+  status      ContentStatus @default(DRAFT)
+  authorId    String?
+  publishedAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  author      User?         @relation("LessonAuthor", fields: [authorId], references: [id])
+  quizzes     Quiz[]
+
+  @@index([status, publishedAt])
+}
+
+model Quiz {
+  id           String        @id @default(uuid())
+  lessonId     String?
+  title        String
+  status       ContentStatus @default(DRAFT)
+  attemptLimit Int?
+  authorId     String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  lesson       Lesson?       @relation(fields: [lessonId], references: [id])
+  author       User?         @relation("QuizAuthor", fields: [authorId], references: [id])
+  questions    Question[]
+  attempts     QuizAttempt[]
+
+  @@index([lessonId])
+  @@index([status])
+}
+
+model Question {
+  id       String       @id @default(uuid())
+  quizId   String
+  prompt   String
+  type     QuestionType @default(SINGLE_CHOICE)
+  position Int
+  points   Int
+  quiz     Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options  Option[]
+
+  @@unique([quizId, position])
+  @@index([quizId])
+}
+
+model Option {
+  id         String   @id @default(uuid())
+  questionId String
+  label      String
+  position   Int
+  isCorrect  Boolean  @default(false)
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, position])
+}
+
+model QuizAttempt {
+  id          String   @id @default(uuid())
+  userId      String
+  quizId      String
+  score       Int
+  maxScore    Int
+  passed      Boolean
+  answers     Json
+  submittedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id])
+  quiz        Quiz     @relation(fields: [quizId], references: [id])
+
+  @@index([userId, quizId, submittedAt])
+  @@index([quizId, submittedAt])
+}
+
+model Task {
+  id             String         @id @default(uuid())
+  title          String
+  instructions   String
+  status         ContentStatus  @default(DRAFT)
+  points         Int
+  authorId       String?
+  startsAt       DateTime?
+  dueAt          DateTime?
+  requiresReview Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  author         User?          @relation("TaskAuthor", fields: [authorId], references: [id])
+  submissions    Submission[]
+  challenges     ChallengeTask[]
+
+  @@index([status, dueAt])
+}
+
+model Submission {
+  id         String             @id @default(uuid())
+  taskId     String
+  userId     String
+  status     SubmissionStatus
+  text       String?
+  assetId    String?
+  reviewerId String?
+  reviewedAt DateTime?
+  reviewNote String?
+  createdAt  DateTime           @default(now())
+  updatedAt  DateTime           @updatedAt
+  task       Task               @relation(fields: [taskId], references: [id])
+  user       User               @relation("SubmissionAuthor", fields: [userId], references: [id])
+  reviewer   User?              @relation("Reviewer", fields: [reviewerId], references: [id])
+  asset      UploadAsset?       @relation(fields: [assetId], references: [id])
+
+  @@index([status, taskId, createdAt])
+  @@index([userId, createdAt])
+}
+
+model UploadAsset {
+  id         String       @id @default(uuid())
+  userId     String
+  provider   String
+  storageKey String
+  mimeType   String
+  size       Int
+  createdAt  DateTime     @default(now())
+  user       User         @relation(fields: [userId], references: [id])
+  submissions Submission[]
+
+  @@index([userId])
+}
+
+model PointLedger {
+  id             String   @id @default(uuid())
+  userId         String
+  amount         Int
+  reason         String
+  sourceType     String
+  sourceId       String
+  idempotencyKey String   @unique
+  createdAt      DateTime @default(now())
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([sourceType, sourceId])
+}
+
+model Badge {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  description String
+  criteria    Json
+  active      Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  awards      UserBadge[]
+}
+
+model UserBadge {
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
+  source   String?
+  user     User     @relation(fields: [userId], references: [id])
+  badge    Badge    @relation(fields: [badgeId], references: [id])
+
+  @@id([userId, badgeId])
+  @@index([badgeId, earnedAt])
+}
+
+model Challenge {
+  id          String          @id @default(uuid())
+  title       String
+  description String
+  startsAt    DateTime
+  endsAt      DateTime
+  status      ChallengeStatus @default(DRAFT)
+  schoolId    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  school      School?         @relation(fields: [schoolId], references: [id])
+  tasks       ChallengeTask[]
+
+  @@index([status, startsAt, endsAt])
+  @@index([schoolId])
+}
+
+model ChallengeTask {
+  challengeId String
+  taskId      String
+  challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  task        Task      @relation(fields: [taskId], references: [id])
+
+  @@id([challengeId, taskId])
+  @@index([taskId])
+}
+
+model Notification {
+  id        String    @id @default(uuid())
+  userId    String
+  type      String
+  payload   Json
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, readAt, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String
+  action     String
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  actor      User     @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+}
