@@ -45,6 +45,8 @@
 - Added a per-user in-app notification opt-out and applied it to review, points-awarded, and badge-earned notices. Existing notices are retained.
 - Added task start-date controls at creation/edit time, student availability messaging, and server-side validation that due dates follow start dates.
 - Added a paginated class-scoped teacher points ranking with a stable points/name tie order and server-side class membership authorization.
+- Added admin point-award reversals through one-time compensating ledger entries, with a required reason, idempotency key, and audit record.
+- Added inline admin school name/region editing and audited school update transactions.
 - Added draft-or-publish choices when teachers create lessons and tasks, with status-specific feedback and management lists for both states.
 
 ## Remaining work

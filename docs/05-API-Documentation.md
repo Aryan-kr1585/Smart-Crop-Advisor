@@ -23,7 +23,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Users | GET `/users` | Search/manage; admin or scoped teacher | `?schoolId&classId&cursor&limit` → `{items,nextCursor}` | 401,403,422 |
 | Schools | GET `/schools` | List; authenticated, scope applied | pagination → `{items,nextCursor}` | 401,403 |
 | Schools | POST `/schools` | Create; admin | `{name}` → `{id,name}` | 401,403,409,422 |
-| Schools | PATCH `/schools/:schoolId` | Update; admin | `{name,status}` → school | 401,403,404,422 |
+| Schools | PATCH `/schools/:schoolId` | Update; admin; change audited | `{name?,region?,status?}` → school | 401,403,404,409,422 |
 | Classes | GET `/schools/:schoolId/classes` | List; admin/assigned teacher | pagination → `{items,nextCursor}` | 401,403,404 |
 | Classes | GET `/classes/:classId/progress` | Ranked point totals; admin/assigned teacher | `?cursor&limit` → `{items:[{rank,userId,displayName,points}],nextCursor}` | 401,403,404,422 |
 | Classes | POST `/schools/:schoolId/classes` | Create; admin | `{name,academicYear}` → class | 401,403,409,422 |
@@ -49,6 +49,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Upload | POST `/uploads/signature` | Authorize upload; eligible student | `{fileName,mimeType,size}` → signed params | 401,403,422,429 |
 | Points | GET `/users/me/points` | Own summary/history; student | pagination → `{total,entries,nextCursor}` | 401,422 |
 | Points | GET `/users/:userId/points` | Scoped progress; teacher/admin | pagination → summary | 401,403,404 |
+| Points | POST `/users/:userId/points/:entryId/reversal` | Reverse one ledger entry; admin | `{reason}` → compensating entry | 401,403,404,409,422 |
 | Badges | GET `/badges` | Browse definitions; auth | → `{items:[]}` | 401 |
 | Badges | GET `/users/me/badges` | Own awards; student | → `{items:[]}` | 401 |
 | Badges | POST `/badges` | Create; admin | `{name,description,criteria}` → badge | 401,403,409,422 |

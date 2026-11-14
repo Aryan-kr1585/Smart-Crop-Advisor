@@ -317,6 +317,13 @@ usersRouter.get('/:userId/points', requireRoles('ADMIN', 'TEACHER'), validate({
       take: req.query.limit + 1,
     });
     const page = pageResult(rows, req.query.limit);
+    const reversedEntries = req.user.role === 'ADMIN' && page.items.length
+      ? await prisma.pointLedger.findMany({
+        where: { sourceType: 'REVERSAL', sourceId: { in: page.items.map((entry) => entry.id) } },
+        select: { sourceId: true },
+      })
+      : [];
+    const reversedIds = new Set(reversedEntries.map((entry) => entry.sourceId));
     res.json({
       userId: student.id,
       displayName: student.displayName,
@@ -327,10 +334,53 @@ usersRouter.get('/:userId/points', requireRoles('ADMIN', 'TEACHER'), validate({
         amount: entry.amount,
         reason: entry.reason,
         createdAt: entry.createdAt,
+        ...(req.user.role === 'ADMIN' ? { reversed: reversedIds.has(entry.id) } : {}),
       })),
       nextCursor: page.nextCursor,
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+usersRouter.post('/:userId/points/:entryId/reversal', requireRoles('ADMIN'), validate({
+  params: z.object({ userId: z.string().uuid(), entryId: z.string().uuid() }),
+  body: z.object({ reason: z.string().trim().min(4).max(500) }),
+}), async (req, res, next) => {
+  try {
+    const reversal = await prisma.$transaction(async (tx) => {
+      const source = await tx.pointLedger.findFirst({
+        where: { id: req.params.entryId, userId: req.params.userId },
+      });
+      if (!source || source.amount <= 0 || source.sourceType === 'REVERSAL') throw notFound('Reversible point award not found');
+      const idempotencyKey = `reversal:${source.id}`;
+      const existingReversal = await tx.pointLedger.findUnique({ where: { idempotencyKey } });
+      if (existingReversal) throw conflict('This point entry has already been reversed');
+      const created = await tx.pointLedger.create({
+        data: {
+          userId: source.userId,
+          amount: -source.amount,
+          reason: `Reversal: ${req.body.reason}`,
+          sourceType: 'REVERSAL',
+          sourceId: source.id,
+          idempotencyKey,
+        },
+      });
+      await writeAudit(tx, {
+        actorId: req.user.id,
+        action: 'POINTS_REVERSE',
+        entityType: 'PointLedger',
+        entityId: created.id,
+        metadata: { userId: source.userId, originalEntryId: source.id, amount: created.amount, reason: req.body.reason },
+      });
+      return created;
+    });
+    res.status(201).json({ id: reversal.id, amount: reversal.amount, originalEntryId: reversal.sourceId });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      next(conflict('This point entry has already been reversed'));
+      return;
+    }
     next(error);
   }
 });

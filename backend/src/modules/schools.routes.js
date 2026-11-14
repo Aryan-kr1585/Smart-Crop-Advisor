@@ -92,12 +92,22 @@ schoolsRouter.patch('/schools/:schoolId', requireRoles('ADMIN'), validate({
   params: z.object({ schoolId: z.string().uuid() }),
   body: z.object({
     name: z.string().trim().min(2).max(120).optional(),
-    region: z.string().trim().max(80).optional(),
+    region: z.string().trim().max(80).nullable().optional(),
     status: z.enum(['ACTIVE', 'SUSPENDED']).optional(),
-  }),
+  }).refine((body) => Object.keys(body).length > 0, { message: 'No changes provided' }),
 }), async (req, res, next) => {
   try {
-    const school = await prisma.school.update({ where: { id: req.params.schoolId }, data: req.body });
+    const school = await prisma.$transaction(async (tx) => {
+      const updated = await tx.school.update({ where: { id: req.params.schoolId }, data: req.body });
+      await writeAudit(tx, {
+        actorId: req.user.id,
+        action: 'SCHOOL_UPDATE',
+        entityType: 'School',
+        entityId: updated.id,
+        metadata: { changedFields: Object.keys(req.body) },
+      });
+      return updated;
+    });
     res.json({ id: school.id, name: school.name, region: school.region, status: school.status });
   } catch (error) {
     if (error.code === 'P2025') {

@@ -121,6 +121,7 @@ export function AdminHome({ section }) {
                       </select>
                     </label>
                   </div>
+                  {person.role === 'STUDENT' && <StudentPointHistory person={person} />}
                 </li>
               ))}
             </ul>
@@ -245,7 +246,73 @@ export function AdminHome({ section }) {
   );
 }
 
+function StudentPointHistory({ person }) {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const queryClient = useQueryClient();
+  const points = useInfiniteQuery({
+    queryKey: ['admin-points', person.id],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/users/${person.id}/points`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: open,
+  });
+  const reverse = useMutation({
+    mutationFn: ({ entryId, reason }) => api(`/users/${person.id}/points/${entryId}/reversal`, {
+      method: 'POST', body: { reason },
+    }),
+    onSuccess: async () => {
+      setMessage('Point entry reversed.');
+      await queryClient.invalidateQueries({ queryKey: ['admin-points', person.id] });
+    },
+  });
+  return (
+    <section className="stack">
+      <button type="button" className="secondary" onClick={() => setOpen((value) => !value)}>
+        {open ? 'Hide points history' : 'Manage points'}
+      </button>
+      {open && <>
+        <ErrorList error={points.error || reverse.error} />
+        {message && <p className="banner" role="status">{message}</p>}
+        <QueryState query={points}>
+          {() => {
+            const summary = points.data.pages[0];
+            const entries = points.data.pages.flatMap((page) => page.entries);
+            return (
+              <div className="stack">
+                <p><strong>{summary.total} eco-points</strong> · {summary.level.name}</p>
+                {entries.length === 0 ? <p className="muted">No point history.</p> : (
+                  <ul className="list">
+                    {entries.map((entry) => (
+                      <li key={entry.id} className="row wrap spread">
+                        <span>{entry.amount > 0 ? '+' : ''}{entry.amount} · {entry.reason}</span>
+                        {entry.amount > 0 && !entry.reversed && (
+                          <button type="button" className="danger" disabled={reverse.isPending} onClick={() => {
+                            const reason = window.prompt('Why should this point award be reversed?');
+                            if (!reason || reason.trim().length < 4) return;
+                            if (window.confirm(`Reverse ${entry.amount} points for ${person.displayName}?`)) {
+                              setMessage('');
+                              reverse.mutate({ entryId: entry.id, reason: reason.trim() });
+                            }
+                          }}>{reverse.isPending ? 'Reversing…' : 'Reverse award'}</button>
+                        )}
+                        {entry.reversed && <span className="muted">Reversed</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <LoadMore query={points} label="point entries" />
+              </div>
+            );
+          }}
+        </QueryState>
+      </>}
+    </section>
+  );
+}
+
 function SchoolClasses({ school, onError, onDone }) {
+  const [editingSchool, setEditingSchool] = useState(false);
   const classes = useInfiniteQuery({
     queryKey: ['classes', school.id],
     initialPageParam: null,
@@ -262,8 +329,32 @@ function SchoolClasses({ school, onError, onDone }) {
   const userItems = users.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <section className="card stack">
-      <h2>{school.name}</h2>
-      <p className="muted">{school.region || 'Region not set'}</p>
+      <div className="spread">
+        <div>
+          <h2>{school.name}</h2>
+          <p className="muted">{school.region || 'Region not set'}</p>
+        </div>
+        {!editingSchool && <button type="button" className="secondary" onClick={() => setEditingSchool(true)}>Edit school</button>}
+      </div>
+      {editingSchool && <form className="stack" onSubmit={async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        try {
+          await api(`/schools/${school.id}`, {
+            method: 'PATCH',
+            body: { name: form.get('name'), region: form.get('region') || null },
+          });
+          setEditingSchool(false);
+          onDone('School details updated.');
+        } catch (err) { onError(err); }
+      }}>
+        <Field label="School name"><input name="name" defaultValue={school.name} required minLength={2} maxLength={120} /></Field>
+        <Field label="Region"><input name="region" defaultValue={school.region ?? ''} maxLength={80} /></Field>
+        <div className="row">
+          <button type="submit">Save school</button>
+          <button type="button" className="secondary" onClick={() => setEditingSchool(false)}>Cancel</button>
+        </div>
+      </form>}
       <form className="stack" onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);

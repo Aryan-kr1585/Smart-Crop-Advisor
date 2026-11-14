@@ -27,6 +27,8 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - Admins can create challenges as drafts or activate them immediately.
 - Teachers can inspect point totals and paginated point histories for students in assigned classes.
 - Teachers can view a paginated, class-scoped points ranking; the student-facing leaderboard still depends on privacy policy approval.
+- Admins can reverse a point ledger entry once with a compensating entry and an audit reason.
+- Admins can edit school names and regions; updates are audited.
 - Users can opt out of new in-app notices from their profile; existing notices remain available.
 - Teachers can set task start/due dates at creation and edit time; the API enforces date ordering.
 
