@@ -22,7 +22,7 @@ Use synthetic fixtures only, never real student data or production credentials.
 Use bcrypt; managed JWT secrets; Zod validation; server-side resource authorization; HTTPS; restrictive CORS; auth/upload rate limits; secure headers; reviewed dependencies; Prisma parameterized queries. Restrict uploads and verify ownership/size/type server-side. Logs must omit passwords, tokens, private URLs, and unnecessary student details. Export and user-requested evidence deletion are implemented; approve consent/age, minimization, retention periods, backup expiry, incident handling, leaderboard visibility, and applicable legal duties before production.
 
 ## Local setup and environment
-Package manifests, lockfiles, Node 24 pin, and scripts exist. See the repository [README](../README.md) for local setup. Use local PostgreSQL or non-production Neon; configure placeholder-only env; apply the checked-in Prisma migration; start API/client with documented scripts and local CORS/API URL. Fresh migration and seed were exercised on a disposable database.
+Package manifests, lockfiles, Node 24 pin, scripts, and a GitHub Actions validation/build workflow exist. See the repository [README](../README.md) for local setup. Use local PostgreSQL or non-production Neon; configure placeholder-only env; apply the checked-in Prisma migration; start API/client with documented scripts and local CORS/API URL. Fresh migration and seed were exercised on a disposable database.
 
 Proposed environment names: `DATABASE_URL`, `JWT_SECRET` (or key pair), `CLIENT_ORIGIN`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `NODE_ENV`, API port. Validate configuration at startup, separate secrets per environment, never expose secrets through Vite variables or logs.
 
@@ -31,7 +31,7 @@ Proposed environment names: `DATABASE_URL`, `JWT_SECRET` (or key pair), `CLIENT_
 - **Render:** Node/Express, health endpoint, secrets, HTTPS, CORS, structured logs, controlled migration.
 - **Vercel:** static client, correct API URL, preview/production separation.
 - **Cloudinary:** restricted upload policy and retention/cleanup.
-- **GitHub Actions:** lockfile-based install, lint/build/test/security checks, protected deploy environments and reviewed production workflow.
+- **GitHub Actions:** current CI installs both lockfiles, validates Prisma, checks backend syntax, and builds the frontend. API/integration/security checks and a reviewed production deployment workflow remain to be added.
 
 ## Production checklist
 - [ ] Scope, privacy/consent, terms, and content policy approved.

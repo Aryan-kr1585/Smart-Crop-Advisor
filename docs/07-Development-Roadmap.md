@@ -40,9 +40,9 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - **Status: PARTIAL.** Points, levels, streaks, badges, challenges, leaderboard, user export, and account anonymization are implemented. Review semantic/keyboard/screen-reader behavior and approve ranking, scoring, consent, language, and retention policy.
 
 ## Phase 7 – Release quality and security
-- **Status: NOT COMPLETE.** One scoring test exists; schema validation and a frontend production build passed, but the test suite was not run. Backend install reported four high severity dependency findings, including a Multer 1.x deprecation. Add API/integration/authz/upload/UI coverage, review dependency findings, and complete privacy/accessibility checks with synthetic data.
+- **Status: NOT COMPLETE.** A GitHub Actions workflow now installs lockfiles, validates the Prisma schema, checks backend syntax, and builds the frontend. One scoring test exists; the test suite was not run and the hosted workflow has not yet been observed. Backend install reported four high severity dependency findings, including a Multer 1.x deprecation. Add API/integration/authz/upload/UI coverage, review dependency findings, and complete privacy/accessibility checks with synthetic data.
 
 ## Phase 8 – Deployment and presentation
-- **Status: NOT STARTED.** No CI workflow, production config, or deployed service is present. Requires scope approval, migration review, accounts/secrets, backup/restore procedure, release checks, and rollback ownership.
+- **Status: NOT STARTED.** A validation/build CI workflow is present, but no production config or deployed service is present. Requires scope approval, migration review, accounts/secrets, backup/restore procedure, release checks, and rollback ownership.
 
 See [Project Status](09-Project-Status.md) and [Testing and Deployment](08-Testing-and-Deployment.md).

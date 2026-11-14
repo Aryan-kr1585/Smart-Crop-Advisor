@@ -16,7 +16,7 @@
 | Core workflows | Lessons, quiz authoring/attempts, tasks/submissions/review, points, badges, challenges, leaderboard, notices, schools/classes, account management |
 | Uploads | Local API disk path by default; optional Cloudinary signing/retrieval support; account deletion removes owned evidence; routine retention and consent policy unresolved |
 | Verification | Prisma schema validation passed; migration applied and demo seed completed on a disposable PostgreSQL 18 database; frontend production build passed. Automated tests were not run |
-| Deployment | No CI workflow or production deployment configuration found |
+| Deployment | GitHub Actions validation/build workflow added; hosted execution not yet observed; no production deployment configuration |
 | Secrets | `.env` exists locally and is ignored; its values were not read or changed |
 
 ## Work completed in this pass
@@ -47,6 +47,7 @@
 - Added a paginated class-scoped teacher points ranking with a stable points/name tie order and server-side class membership authorization.
 - Added admin point-award reversals through one-time compensating ledger entries, with a required reason, idempotency key, and audit record.
 - Added inline admin school name/region editing and audited school update transactions.
+- Added a GitHub Actions workflow for lockfile installation, Prisma schema validation, backend syntax checks, and frontend build.
 - Added draft-or-publish choices when teachers create lessons and tasks, with status-specific feedback and management lists for both states.
 
 ## Remaining work
@@ -55,7 +56,7 @@
 - Add broader migration/seed regression coverage and ensure deployment uses the checked-in migration history.
 - Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
 - Approve routine evidence retention, pseudonymous history retention, and backup expiry periods.
-- Configure and verify CI/deployment, backups, monitoring, and rollback before release.
+- Verify hosted CI runs; configure deployment, backups, monitoring, and rollback before release.
 - Review the dependency audit findings reported during backend installation (four high severity findings; Multer 1.x is deprecated).
 
 No stakeholder approval, end-to-end verification, deployment, or impact outcome is claimed. See [Roadmap](07-Development-Roadmap.md), [Testing and Deployment](08-Testing-and-Deployment.md), and [README](../README.md).
