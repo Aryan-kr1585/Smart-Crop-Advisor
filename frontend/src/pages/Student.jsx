@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, apiBlob } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
+import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 
 export function StudentHome() {
   const { user } = useAuth();
@@ -28,7 +29,7 @@ export function StudentHome() {
           {(data) => (
             <article className="card">
               <h2>Lessons</h2>
-              <p>{data.items.length} published</p>
+              <p>{data.items.length}{data.nextCursor ? '+' : ''} published lessons available</p>
               <Link to="/learn/lessons">Continue reading</Link>
             </article>
           )}
@@ -37,7 +38,7 @@ export function StudentHome() {
           {(data) => (
             <article className="card">
               <h2>Open tasks</h2>
-              <p>{data.items.filter((task) => task.mySubmission?.status !== 'APPROVED').length} still waiting on you</p>
+              <p>{data.items.filter((task) => task.mySubmission?.status !== 'APPROVED').length}{data.nextCursor ? '+' : ''} tasks still waiting on you</p>
               <Link to="/learn/tasks">See tasks</Link>
             </article>
           )}
@@ -48,14 +49,19 @@ export function StudentHome() {
 }
 
 export function LessonList() {
-  const lessons = useQuery({ queryKey: ['lessons'], queryFn: () => api('/lessons') });
+  const lessons = useInfiniteQuery({
+    queryKey: ['lessons', 'list'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/lessons', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
   return (
     <div className="stack">
       <h1>Lessons</h1>
       <QueryState query={lessons}>
-        {(data) => (
+        {() => (
           <ul className="list">
-            {data.items.map((lesson) => (
+            {lessons.data.pages.flatMap((page) => page.items).map((lesson) => (
               <li key={lesson.id} className="card">
                 <h2>{lesson.title}</h2>
                 <Link to={`/learn/lessons/${lesson.id}`}>Read</Link>
@@ -64,6 +70,7 @@ export function LessonList() {
           </ul>
         )}
       </QueryState>
+      <LoadMore query={lessons} label="lessons" />
     </div>
   );
 }
@@ -167,28 +174,42 @@ export function QuizPage() {
 }
 
 export function TaskList() {
-  const tasks = useQuery({ queryKey: ['tasks'], queryFn: () => api('/tasks') });
-  const challenges = useQuery({ queryKey: ['challenges'], queryFn: () => api('/challenges') });
+  const tasks = useInfiniteQuery({
+    queryKey: ['tasks', 'list'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/tasks', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+  const challenges = useInfiniteQuery({
+    queryKey: ['challenges'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/challenges', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
   return (
     <div className="stack">
       <h1>Tasks</h1>
       <QueryState query={challenges}>
-        {(data) => data.items.length > 0 && (
+        {() => {
+          const items = challenges.data.pages.flatMap((page) => page.items);
+          return items.length > 0 && (
           <section className="card">
             <h2>Current challenge</h2>
-            {data.items.map((challenge) => (
+            {items.map((challenge) => (
               <div key={challenge.id}>
                 <h3>{challenge.title}</h3>
                 <p>{challenge.description}</p>
               </div>
             ))}
           </section>
-        )}
+          );
+        }}
       </QueryState>
+      <LoadMore query={challenges} label="challenges" />
       <QueryState query={tasks}>
-        {(data) => (
+        {() => (
           <ul className="list">
-            {data.items.map((task) => (
+            {tasks.data.pages.flatMap((page) => page.items).map((task) => (
               <li key={task.id} className="card spread">
                 <div>
                   <h2>{task.title}</h2>
@@ -200,6 +221,7 @@ export function TaskList() {
           </ul>
         )}
       </QueryState>
+      <LoadMore query={tasks} label="tasks" />
     </div>
   );
 }
@@ -302,28 +324,38 @@ export function TaskDetail() {
 }
 
 export function ProgressPage() {
-  const points = useQuery({ queryKey: ['points'], queryFn: () => api('/users/me/points') });
+  const points = useInfiniteQuery({
+    queryKey: ['points', 'ledger'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/users/me/points', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
   const badges = useQuery({ queryKey: ['my-badges'], queryFn: () => api('/users/me/badges') });
   const catalog = useQuery({ queryKey: ['badges'], queryFn: () => api('/badges') });
   return (
     <div className="stack">
       <h1>Eco-points</h1>
       <QueryState query={points}>
-        {(data) => (
+        {() => {
+          const summary = points.data.pages[0];
+          const entries = points.data.pages.flatMap((page) => page.entries);
+          return (
           <section className="card stack">
-            <p className="score">{data.total}</p>
-            <p>{data.level.name}{data.level.next ? ` · ${data.level.next.pointsToGo} points to ${data.level.next.name}` : ''}</p>
-            <p>Streak: {data.streak} day{data.streak === 1 ? '' : 's'}. Today stays open until it ends.</p>
+            <p className="score">{summary.total}</p>
+            <p>{summary.level.name}{summary.level.next ? ` · ${summary.level.next.pointsToGo} points to ${summary.level.next.name}` : ''}</p>
+            <p>Streak: {summary.streak} day{summary.streak === 1 ? '' : 's'}. Today stays open until it ends.</p>
             <h2>Ledger</h2>
-            {data.entries.length === 0 && <p>No points yet. Pass a quiz or get a task approved.</p>}
+            {entries.length === 0 && <p>No points yet. Pass a quiz or get a task approved.</p>}
             <ul>
-              {data.entries.map((entry) => (
+              {entries.map((entry) => (
                 <li key={entry.id}>{entry.amount > 0 ? '+' : ''}{entry.amount} · {entry.reason}</li>
               ))}
             </ul>
           </section>
-        )}
+          );
+        }}
       </QueryState>
+      <LoadMore query={points} label="ledger entries" />
       <QueryState query={badges}>
         {(data) => (
           <section className="card">
@@ -347,9 +379,11 @@ export function ProgressPage() {
 
 export function LeaderboardPage() {
   const [period, setPeriod] = useState('all');
-  const board = useQuery({
+  const board = useInfiniteQuery({
     queryKey: ['board', period],
-    queryFn: () => api(`/leaderboard?period=${period}`),
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/leaderboard?period=${period}`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   });
   return (
     <div className="stack">
@@ -365,12 +399,15 @@ export function LeaderboardPage() {
       </div>
       <p className="muted">Names are display names for your school. Email addresses are not shown.</p>
       <QueryState query={board}>
-        {(data) => (
+        {() => {
+          const summary = board.data.pages[0];
+          const items = board.data.pages.flatMap((page) => page.items);
+          return (
           <>
-            {data.me && <p className="pill">You are rank {data.me.rank} with {data.me.points} eco-points</p>}
-            {data.items.length === 0 && <p>No students in this school yet. Ask an admin to add your class.</p>}
+            {summary.me && <p className="pill">You are rank {summary.me.rank} with {summary.me.points} eco-points</p>}
+            {items.length === 0 && <p>No students in this school yet. Ask an admin to add your class.</p>}
             <ol className="list">
-              {data.items.map((row) => (
+              {items.map((row) => (
                 <li key={`${row.rank}-${row.displayName}`} className="card spread">
                   <span>{row.rank}. {row.displayName}</span>
                   <strong>{row.points}</strong>
@@ -378,15 +415,22 @@ export function LeaderboardPage() {
               ))}
             </ol>
           </>
-        )}
+          );
+        }}
       </QueryState>
+      <LoadMore query={board} label="students" />
     </div>
   );
 }
 
 export function NoticesPage() {
   const queryClient = useQueryClient();
-  const notices = useQuery({ queryKey: ['notices'], queryFn: () => api('/notifications') });
+  const notices = useInfiniteQuery({
+    queryKey: ['notices'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/notifications', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
   const mark = useMutation({
     mutationFn: (id) => api(`/notifications/${id}/read`, { method: 'PATCH', body: {} }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['notices'] }),
@@ -395,10 +439,12 @@ export function NoticesPage() {
     <div className="stack">
       <h1>Notices</h1>
       <QueryState query={notices}>
-        {(data) => (
+        {() => {
+          const items = notices.data.pages.flatMap((page) => page.items);
+          return (
           <ul className="list">
-            {data.items.length === 0 && <li>No notices yet.</li>}
-            {data.items.map((item) => (
+            {items.length === 0 && <li>No notices yet.</li>}
+            {items.map((item) => (
               <li key={item.id} className="card stack">
                 <p>{noticeText(item)}</p>
                 <p className="muted">{new Date(item.createdAt).toLocaleString()}</p>
@@ -408,8 +454,10 @@ export function NoticesPage() {
               </li>
             ))}
           </ul>
-        )}
+          );
+        }}
       </QueryState>
+      <LoadMore query={notices} label="notices" />
     </div>
   );
 }

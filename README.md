@@ -49,4 +49,4 @@ Use `npm run build:web` to create the client production build. `npm test` runs t
 
 ## Known limits
 
-The current UI uses the first available class for teacher roster display, and admin/teacher list screens use the first API page. There is no CI workflow, production deployment config, password recovery, or student privacy/consent workflow. Read [Project Status](docs/09-Project-Status.md) before treating this MVP as release-ready.
+Some dashboard summary counts show the first page as a lower-bound preview. There is no CI workflow, production deployment config, password recovery, or student privacy/consent workflow. Read [Project Status](docs/09-Project-Status.md) before treating this MVP as release-ready.

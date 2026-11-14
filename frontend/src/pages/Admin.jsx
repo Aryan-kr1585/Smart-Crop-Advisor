@@ -1,12 +1,31 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
+import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 
 export function AdminHome({ section }) {
-  const schools = useQuery({ queryKey: ['schools'], queryFn: () => api('/schools') });
-  const users = useQuery({ queryKey: ['users'], queryFn: () => api('/users') });
-  const tasks = useQuery({ queryKey: ['tasks'], queryFn: () => api('/tasks'), enabled: section === 'content' });
+  const schools = useInfiniteQuery({
+    queryKey: ['schools'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/schools', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: section === 'overview',
+  });
+  const users = useInfiniteQuery({
+    queryKey: ['users'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/users', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: section === 'people',
+  });
+  const tasks = useInfiniteQuery({
+    queryKey: ['tasks'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/tasks', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: section === 'content',
+  });
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
@@ -47,10 +66,11 @@ export function AdminHome({ section }) {
           <button type="submit">Create school</button>
         </form>
         <QueryState query={schools}>
-          {(data) => data.items.map((school) => (
+          {() => schools.data.pages.flatMap((page) => page.items).map((school) => (
             <SchoolClasses key={school.id} school={school} onError={setError} onDone={(text) => { setMessage(text); refresh(); }} />
           ))}
         </QueryState>
+        <LoadMore query={schools} label="schools" />
       </div>
     );
   }
@@ -61,9 +81,9 @@ export function AdminHome({ section }) {
         <h1>People</h1>
         <ErrorList error={error} />
         <QueryState query={users}>
-          {(data) => (
+          {() => (
             <ul className="list">
-              {data.items.map((person) => (
+              {users.data.pages.flatMap((page) => page.items).map((person) => (
                 <li key={person.id} className="card stack">
                   <strong>{person.displayName}</strong>
                   <p className="muted">{person.email}</p>
@@ -95,6 +115,7 @@ export function AdminHome({ section }) {
             </ul>
           )}
         </QueryState>
+        <LoadMore query={users} label="people" />
       </div>
     );
   }
@@ -161,13 +182,14 @@ export function AdminHome({ section }) {
         <Field label="Ends"><input name="endsAt" type="datetime-local" required /></Field>
         <fieldset>
           <legend>Tasks</legend>
-          {tasks.data?.items?.map((task) => (
+          {tasks.data?.pages.flatMap((page) => page.items).map((task) => (
             <label key={task.id} className="choice">
               <input type="checkbox" name="taskIds" value={task.id} />
               <span>{task.title}</span>
             </label>
           ))}
         </fieldset>
+        <LoadMore query={tasks} label="tasks" />
         <button type="submit">Create challenge</button>
       </form>
     </div>
@@ -175,8 +197,20 @@ export function AdminHome({ section }) {
 }
 
 function SchoolClasses({ school, onError, onDone }) {
-  const classes = useQuery({ queryKey: ['classes', school.id], queryFn: () => api(`/schools/${school.id}/classes`) });
-  const users = useQuery({ queryKey: ['users'], queryFn: () => api('/users') });
+  const classes = useInfiniteQuery({
+    queryKey: ['classes', school.id],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/schools/${school.id}/classes`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+  const users = useInfiniteQuery({
+    queryKey: ['users', school.id],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/users?schoolId=${encodeURIComponent(school.id)}`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+  const classItems = classes.data?.pages.flatMap((page) => page.items) ?? [];
+  const userItems = users.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <section className="card stack">
       <h2>{school.name}</h2>
@@ -198,7 +232,7 @@ function SchoolClasses({ school, onError, onDone }) {
         <button type="submit">Add class</button>
       </form>
       <QueryState query={classes}>
-        {(data) => data.items.map((item) => (
+        {() => classItems.length === 0 ? <p className="muted">No classes have been created for this school yet.</p> : classItems.map((item) => (
           <form key={item.id} className="stack" onSubmit={async (event) => {
             event.preventDefault();
             const userId = new FormData(event.currentTarget).get('userId');
@@ -211,7 +245,7 @@ function SchoolClasses({ school, onError, onDone }) {
             <Field label="Add an existing account">
               <select name="userId" required defaultValue="">
                 <option value="" disabled>Choose a person</option>
-                {users.data?.items?.map((person) => (
+                {userItems.map((person) => (
                   <option key={person.id} value={person.id}>{person.displayName} ({person.role.toLowerCase()})</option>
                 ))}
               </select>
@@ -220,6 +254,10 @@ function SchoolClasses({ school, onError, onDone }) {
           </form>
         ))}
       </QueryState>
+      {users.isLoading && <p className="status" role="status">Loading people…</p>}
+      {users.isError && <ErrorList error={users.error} />}
+      <LoadMore query={classes} label="classes" />
+      <LoadMore query={users} label="people" />
     </section>
   );
 }

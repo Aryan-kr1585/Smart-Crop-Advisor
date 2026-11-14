@@ -1,23 +1,21 @@
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
+import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 import { Evidence } from './Student.jsx';
 
 export function TeachHome() {
   const classes = useQuery({ queryKey: ['my-school'], queryFn: () => api('/schools') });
   const reviews = useQuery({ queryKey: ['reviews', 'PENDING'], queryFn: () => api('/submissions?status=PENDING') });
-  const students = useQuery({ queryKey: ['students'], queryFn: () => api('/users') });
   return (
     <div className="stack">
       <p className="kicker">Teacher desk</p>
       <h1>Your classes</h1>
       <div className="grid">
         <QueryState query={reviews}>
-          {(data) => <article className="card"><h2>Waiting for review</h2><p className="score">{data.items.length}</p></article>}
-        </QueryState>
-        <QueryState query={students}>
-          {(data) => <article className="card"><h2>Students you can see</h2><p className="score">{data.items.length}</p></article>}
+          {(data) => <article className="card"><h2>Pending submissions</h2><p className="score">{data.nextCursor ? `${data.items.length}+` : data.items.length}</p><p><Link to="/teach/reviews">Open review queue</Link></p></article>}
         </QueryState>
       </div>
       <QueryState query={classes}>
@@ -31,33 +29,73 @@ export function TeachHome() {
 function ClassRoster() {
   const schools = useQuery({ queryKey: ['my-school'], queryFn: () => api('/schools') });
   const schoolId = schools.data?.items?.[0]?.id;
-  const classes = useQuery({
+  const classes = useInfiniteQuery({
     queryKey: ['classes', schoolId],
-    queryFn: () => api(`/schools/${schoolId}/classes`),
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/schools/${schoolId}/classes`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(schoolId),
   });
-  const classId = classes.data?.items?.[0]?.id;
-  const students = useQuery({
+  const classItems = classes.data?.pages.flatMap((page) => page.items) ?? [];
+  const [selectedClassId, setSelectedClassId] = useState('');
+  const classId = classItems.some((item) => item.id === selectedClassId)
+    ? selectedClassId
+    : classItems[0]?.id ?? '';
+  const students = useInfiniteQuery({
     queryKey: ['students', classId],
-    queryFn: () => api(`/users?classId=${classId}`),
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/users?classId=${encodeURIComponent(classId)}`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: Boolean(classId),
   });
+  const studentItems = students.data?.pages.flatMap((page) => page.items) ?? [];
   return (
     <section className="card stack">
-      <h2>{classes.data?.items?.[0]?.name || 'Class'}</h2>
-      <QueryState query={students}>
-        {(data) => (
-          <ul>{data.items.map((student) => <li key={student.id}>{student.displayName}</li>)}</ul>
-        )}
-      </QueryState>
+      <h2>Class roster</h2>
+      {classItems.length > 0 && (
+        <Field label="Choose a class">
+          <select value={classId} onChange={(event) => setSelectedClassId(event.target.value)}>
+            {classItems.map((item) => (
+              <option key={item.id} value={item.id}>{item.name}{item.academicYear ? ` · ${item.academicYear}` : ''}</option>
+            ))}
+          </select>
+        </Field>
+      )}
+      {schools.isError && <ErrorList error={schools.error} />}
+      {!schoolId && schools.isSuccess && <p className="muted">No school assigned yet.</p>}
+      {schoolId && classes.isLoading && <p className="status" role="status">Loading classes…</p>}
+      {classes.isError && <ErrorList error={classes.error} />}
+      {schoolId && classes.isSuccess && classItems.length === 0 && <p className="muted">No assigned classes yet.</p>}
+      <LoadMore query={classes} label="classes" />
+      {classId && (
+        <QueryState query={students}>
+          {() => (
+            <>
+              <ul>{studentItems.map((student) => <li key={student.id}>{student.displayName}</li>)}</ul>
+              {studentItems.length === 0 && <p className="muted">No students in this class yet.</p>}
+              <LoadMore query={students} label="students" />
+            </>
+          )}
+        </QueryState>
+      )}
     </section>
   );
 }
 
 export function TeachContent() {
   const queryClient = useQueryClient();
-  const lessons = useQuery({ queryKey: ['lessons'], queryFn: () => api('/lessons') });
-  const tasks = useQuery({ queryKey: ['tasks'], queryFn: () => api('/tasks') });
+  const lessons = useInfiniteQuery({
+    queryKey: ['lessons'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/lessons', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+  const tasks = useInfiniteQuery({
+    queryKey: ['tasks'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/tasks', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
   const [message, setMessage] = useState('');
   const [error, setError] = useState(null);
 
@@ -152,9 +190,10 @@ export function TeachContent() {
         <Field label="Attach to lesson">
           <select name="lessonId" defaultValue="">
             <option value="">None</option>
-            {lessons.data?.items?.map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
+            {lessons.data?.pages.flatMap((page) => page.items).map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
           </select>
         </Field>
+        <LoadMore query={lessons} label="lessons" />
         <Field label="Question"><input name="prompt" required minLength={3} /></Field>
         <Field label="Option 1"><input name="option1" required /></Field>
         <Field label="Option 2"><input name="option2" required /></Field>
@@ -179,8 +218,9 @@ export function TeachContent() {
       <section>
         <h2>Published tasks</h2>
         <QueryState query={tasks}>
-          {(data) => <ul>{data.items.map((task) => <li key={task.id}>{task.title} · {task.points} points</li>)}</ul>}
+          {() => <ul>{tasks.data.pages.flatMap((page) => page.items).map((task) => <li key={task.id}>{task.title} · {task.points} points</li>)}</ul>}
         </QueryState>
+        <LoadMore query={tasks} label="tasks" />
       </section>
     </div>
   );
@@ -188,7 +228,12 @@ export function TeachContent() {
 
 export function ReviewPage() {
   const queryClient = useQueryClient();
-  const reviews = useQuery({ queryKey: ['reviews'], queryFn: () => api('/submissions') });
+  const reviews = useInfiniteQuery({
+    queryKey: ['reviews'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/submissions', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
   const [error, setError] = useState(null);
   const review = useMutation({
     mutationFn: ({ id, decision, reviewNote }) => api(`/submissions/${id}/review`, {
@@ -207,10 +252,12 @@ export function ReviewPage() {
       <h1>Submission review</h1>
       <ErrorList error={error} />
       <QueryState query={reviews}>
-        {(data) => (
+        {() => {
+          const items = reviews.data.pages.flatMap((page) => page.items);
+          return (
           <ul className="list">
-            {data.items.length === 0 && <li>Nothing in the queue.</li>}
-            {data.items.map((item) => (
+            {items.length === 0 && <li>Nothing in the queue.</li>}
+            {items.map((item) => (
               <li key={item.id} className="card stack">
                 <h2>{item.task.title}</h2>
                 <p>{item.student.displayName} · {item.status.toLowerCase()} · {item.task.points} eco-points</p>
@@ -225,8 +272,10 @@ export function ReviewPage() {
               </li>
             ))}
           </ul>
-        )}
+          );
+        }}
       </QueryState>
+      <LoadMore query={reviews} label="submissions" />
     </div>
   );
 }

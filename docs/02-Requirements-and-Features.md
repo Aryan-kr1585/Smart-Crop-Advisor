@@ -28,7 +28,7 @@ Authorization must be checked server-side on every scoped operation. Hiding a cl
 | F-12 Admin | Manage users, schools/classes, content, badges/challenges, activity | Admin role required; validate references; audit sensitive changes | All core entities | PARTIAL — selected school/user/badge/challenge flows |
 | F-13 Notifications | Notify of review results, badges, challenges | User preference, delivery failures handled, no sensitive preview | Notifications/events | PARTIAL — in-app review/award notices; no preferences or delivery service |
 
-This summary is an inspection, not test evidence. Pagination in screens, editing/management coverage, and product policy decisions remain incomplete.
+This summary is an inspection, not test evidence. Cursor pagination now has load-more controls in the main student, teacher, and admin lists. Editing/management coverage and product policy decisions remain incomplete.
 
 For each feature, the workflow, expected behaviour, validation, acceptance criterion, dependency, and status are summarized above; detailed flows and contracts appear in [UI/UX](06-UI-UX-Design.md) and [API](05-API-Documentation.md).
 
