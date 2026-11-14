@@ -1,4 +1,5 @@
 const TOKEN_KEY = 'ecoquest_token';
+const API_BASE_URL = `${(import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')}/api/v1`;
 
 export function getToken() {
   return localStorage.getItem(TOKEN_KEY);
@@ -19,7 +20,7 @@ export async function api(path, { method = 'GET', body, form } = {}) {
     headers['Content-Type'] = 'application/json';
     payload = JSON.stringify(body);
   }
-  const response = await fetch(`/api/v1${path}`, { method, headers, body: payload });
+  const response = await fetch(`${API_BASE_URL}${path}`, { method, headers, body: payload });
   const text = await response.text();
   const data = text ? JSON.parse(text) : null;
   if (response.status === 401 && !path.startsWith('/auth/login')) setToken(null);
@@ -36,7 +37,7 @@ export async function apiBlob(path) {
   const headers = {};
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-  const response = await fetch(`/api/v1${path}`, { headers });
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers });
   if (!response.ok) throw new Error('Could not load the file');
   return response.blob();
 }

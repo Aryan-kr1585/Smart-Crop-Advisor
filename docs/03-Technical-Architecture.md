@@ -9,12 +9,12 @@
 | Backend | Node.js, Express, JavaScript ES Modules, REST, JWT, bcrypt, Zod |
 | Database | PostgreSQL, Prisma, Prisma migrations; Neon hosted target |
 | Images | Cloudinary using signed/controlled upload |
-| Deployment | Render API, Vercel client, GitHub, GitHub Actions |
+| Deployment | Render API, Cloudflare Pages client, Neon PostgreSQL, GitHub Actions |
 
 ## System communication
 ```mermaid
 flowchart LR
-  U[Student / Teacher / Admin browser] -->|HTTPS| V[Vercel: React client]
+  U[Student / Teacher / Admin browser] -->|HTTPS| V[Cloudflare Pages: React client]
   V -->|JSON REST + JWT| R[Render: Express API]
   R -->|Prisma queries| N[(Neon PostgreSQL)]
   V -->|authorized image upload| C[Cloudinary]
@@ -50,7 +50,7 @@ sequenceDiagram
 ## Authentication, uploads, deployment
 Use bcrypt; never store/log plaintext passwords. Password recovery stores only SHA-256 hashes of random, single-use tokens with a 30-minute expiry; completion revokes prior JWTs. Development returns a local reset link; production sends through Resend and requires `RESEND_API_KEY` and `MAIL_FROM`. JWT secrets belong in environment-managed secret stores; define expiry, issuer/audience checks, refresh/revocation, and cookie versus bearer strategy before coding. Verify ownership and school/class scope server-side. The API alone accesses PostgreSQL. Store Cloudinary IDs and safe metadata, not binaries, in PostgreSQL; constrain file size/type and use signed or server-mediated uploads. Define evidence retention/deletion.
 
-Vercel serves client; Render runs API; Neon hosts PostgreSQL; Cloudinary stores evidence. Separate environment credentials, CORS allowlists, HTTPS, health checks, backups, and reviewed migrations. GitHub Actions should run approved build/checks and deploy by environment policy.
+Cloudflare Pages serves the Vite client; Render runs the Express API; Neon hosts PostgreSQL; Cloudinary stores evidence. The client uses `VITE_API_BASE_URL` as the API origin and appends `/api/v1`; leave it unset locally to use Vite's `/api` proxy. Configure Render `CLIENT_ORIGIN` with the exact deployed Pages origin. Separate environment credentials, HTTPS, health checks, backups, and reviewed migrations.
 
 ## Repository layout
 ```text

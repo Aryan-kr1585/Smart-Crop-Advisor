@@ -22,14 +22,14 @@ Use synthetic fixtures only, never real student data or production credentials.
 Use bcrypt; managed JWT secrets; Zod validation; server-side resource authorization; HTTPS; restrictive CORS; auth/upload rate limits; secure headers; reviewed dependencies; Prisma parameterized queries. Restrict uploads and verify ownership/size/type server-side. Logs must omit passwords, tokens, private URLs, and unnecessary student details. Export and user-requested evidence deletion are implemented; approve consent/age, minimization, retention periods, backup expiry, incident handling, leaderboard visibility, and applicable legal duties before production.
 
 ## Local setup and environment
-Package manifests, lockfiles, Node 24 pin, scripts, and a GitHub Actions validation/build workflow exist. See the repository [README](../README.md) for local setup. Use local PostgreSQL or non-production Neon; configure placeholder-only env; apply the checked-in Prisma migration; start API/client with documented scripts and local CORS/API URL. Fresh migration and seed were exercised on a disposable database.
+Package manifests, lockfiles, Node 24 pin, scripts, and a GitHub Actions validation/build workflow exist. See the repository [README](../README.md) for local setup. Use local PostgreSQL or non-production Neon; configure placeholder-only env; apply the checked-in Prisma migration; start API/client with documented scripts and local CORS/API URL. The frontend reads `VITE_API_BASE_URL` at build time; leave it unset for local Vite proxy use. Fresh migration and seed were exercised on a disposable database.
 
 Proposed environment names: `DATABASE_URL`, `JWT_SECRET` (or key pair), `CLIENT_ORIGIN`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `NODE_ENV`, API port. Validate configuration at startup, separate secrets per environment, never expose secrets through Vite variables or logs.
 
 ## Deployment and CI/CD
+- **Cloudflare Pages:** use `frontend` as the project root, `npm run build` as the build command, and `dist` as the build output. Set the production build variable `VITE_API_BASE_URL` to the Render service origin, with no `/api/v1` suffix; the client appends that path. Rebuild after changing this value.
+- **Render:** run from the repository root so both `backend/` and `database/` are available. Build with `cd backend && npm ci && npx prisma generate --schema=../database/prisma/schema.prisma && npx prisma migrate deploy --schema=../database/prisma/schema.prisma`; start with `cd backend && npm start`. Set `NODE_ENV=production`, `DATABASE_URL`, `JWT_SECRET`, `CLIENT_ORIGIN` (the exact Pages origin), `RESEND_API_KEY`, and `MAIL_FROM`. Use Cloudinary credentials for persistent evidence uploads; Render local filesystem is ephemeral.
 - **Neon:** separate environment databases, least privilege, TLS, backups, reviewed migrations.
-- **Render:** Node/Express, health endpoint, secrets, HTTPS, CORS, structured logs, controlled migration.
-- **Vercel:** static client, correct API URL, preview/production separation.
 - **Cloudinary:** restricted upload policy and retention/cleanup.
 - **GitHub Actions:** current CI installs both lockfiles, validates Prisma, checks backend syntax, and builds the frontend. API/integration/security checks and a reviewed production deployment workflow remain to be added.
 
