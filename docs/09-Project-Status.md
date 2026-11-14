@@ -14,7 +14,7 @@
 | Backend | Express API with auth, validation, RBAC, rate limiting, errors, and health endpoint |
 | Database | Prisma PostgreSQL schema, initial migration, and demo seed. Initial migration applied successfully and demo records seeded in a disposable PostgreSQL 18 database |
 | Core workflows | Lessons, quiz authoring/attempts, tasks/submissions/review, points, badges, challenges, leaderboard, notices, schools/classes, account management |
-| Uploads | Local API disk path by default; optional Cloudinary signing/retrieval support; consent and retention policy unresolved |
+| Uploads | Local API disk path by default; optional Cloudinary signing/retrieval support; account deletion removes owned evidence; routine retention and consent policy unresolved |
 | Verification | Prisma schema validation passed; migration applied and demo seed completed on a disposable PostgreSQL 18 database; frontend production build passed. Automated tests were not run |
 | Deployment | No CI workflow or production deployment configuration found |
 | Secrets | `.env` exists locally and is ignored; its values were not read or changed |
@@ -35,13 +35,14 @@
 - Added teacher/admin quiz management with multi-question authoring, edit controls, optional unlimited attempts, and a server-side lock after any student attempt. Added paginated quiz listing and documented the API contract.
 - Added an admin challenge manager for dates, status, school scope, details, and linked tasks, with server-side validation and audit logging.
 - Added single-use, 30-minute password recovery tokens, password reset UI, rate limiting, session revocation, development reset links, and a production Resend delivery adapter.
+- Added authenticated JSON data export and typed-confirmation account erasure. Erasure removes direct identifiers, authored-content attribution, and user evidence while retaining anonymized score/ledger/audit relationships; media objects are removed from local or Cloudinary storage.
 
 ## Remaining work
 
 - Confirm the official title/problem statement and approve age/consent, privacy, evidence retention, moderation, and leaderboard policies.
 - Add broader migration/seed regression coverage and ensure deployment uses the checked-in migration history.
 - Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
-- Define evidence/account data retention, export, and deletion workflows; improve summary-card counts where they currently show only an initial page preview.
+- Approve routine evidence retention, pseudonymous history retention, and backup expiry periods; improve summary-card counts where they currently show only an initial page preview.
 - Configure and verify CI/deployment, backups, monitoring, and rollback before release.
 - Review the dependency audit findings reported during backend installation (four high severity findings; Multer 1.x is deprecated).
 

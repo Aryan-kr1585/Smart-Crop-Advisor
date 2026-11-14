@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, apiBlob } from '../lib/api.js';
+import { api, apiBlob, setToken } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
 import { LoadMore, pageUrl } from '../components/Pagination.jsx';
@@ -474,9 +474,12 @@ function noticeText(item) {
 
 export function ProfilePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [error, setError] = useState(null);
+  const [privacyError, setPrivacyError] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const update = useMutation({
     mutationFn: (displayName) => api('/users/me', { method: 'PATCH', body: { displayName } }),
     onSuccess: (data) => {
@@ -487,22 +490,63 @@ export function ProfilePage() {
     onError: setError,
   });
   return (
-    <form
-      className="panel stack"
-      onSubmit={(event) => {
+    <div className="stack">
+      <form
+        className="panel stack"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setSaved(false);
+          update.mutate(new FormData(event.currentTarget).get('displayName'));
+        }}
+      >
+        <h1>Profile</h1>
+        <p className="muted">{user.email}</p>
+        <ErrorList error={error} />
+        {saved && <p role="status">Name saved.</p>}
+        <Field label="Display name">
+          <input name="displayName" defaultValue={user.displayName} minLength={2} maxLength={80} required />
+        </Field>
+        <button type="submit" disabled={update.isPending}>Save</button>
+      </form>
+      <section className="panel stack">
+        <h2>Your data</h2>
+        <p>Download a JSON copy of your profile, activity, submissions, points, badges, and notices.</p>
+        <ErrorList error={privacyError} />
+        <button type="button" className="secondary" onClick={async () => {
+          setPrivacyError(null);
+          try {
+            const blob = await apiBlob('/users/me/export');
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'ecoquest-data.json';
+            link.click();
+            URL.revokeObjectURL(url);
+          } catch (err) { setPrivacyError(err); }
+        }}>Download my data</button>
+      </section>
+      <form className="panel stack" onSubmit={async (event) => {
         event.preventDefault();
-        setSaved(false);
-        update.mutate(new FormData(event.currentTarget).get('displayName'));
-      }}
-    >
-      <h1>Profile</h1>
-      <p className="muted">{user.email}</p>
-      <ErrorList error={error} />
-      {saved && <p role="status">Name saved.</p>}
-      <Field label="Display name">
-        <input name="displayName" defaultValue={user.displayName} minLength={2} maxLength={80} required />
-      </Field>
-      <button type="submit" disabled={update.isPending}>Save</button>
-    </form>
+        setPrivacyError(null);
+        setDeleting(true);
+        const confirmation = new FormData(event.currentTarget).get('confirmation');
+        try {
+          await api('/users/me', { method: 'DELETE', body: { confirmation } });
+          setToken(null);
+          queryClient.clear();
+          navigate('/', { replace: true });
+        } catch (err) {
+          setPrivacyError(err);
+          setDeleting(false);
+        }
+      }}>
+        <h2>Delete account</h2>
+        <p>We remove your account identifiers, class memberships, notices, badge grants, submission text, and uploaded evidence. Score and audit history is retained under an anonymized record.</p>
+        <Field label="Type DELETE MY ACCOUNT to confirm">
+          <input name="confirmation" autoComplete="off" required pattern="DELETE MY ACCOUNT" />
+        </Field>
+        <button type="submit" className="danger" disabled={deleting}>{deleting ? 'Deleting…' : 'Delete my account'}</button>
+      </form>
+    </div>
   );
 }

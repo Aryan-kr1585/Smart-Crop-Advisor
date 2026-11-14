@@ -1,11 +1,14 @@
 import { Router } from 'express';
+import bcrypt from 'bcryptjs';
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
-import { conflict, forbidden, notFound } from '../lib/errors.js';
+import { AppError, conflict, forbidden, notFound } from '../lib/errors.js';
 import { cursorWhere, pageResult } from '../lib/pagination.js';
 import { publicUser } from '../lib/presenter.js';
 import { levelFor, streakFromDates } from '../lib/scoring.js';
 import { userStats, writeAudit } from '../lib/progress.js';
+import { removeStoredAsset } from '../lib/storage.js';
 import { validate } from '../middleware/validate.js';
 import { requireAuth, requireRoles } from '../middleware/auth.js';
 
@@ -21,6 +24,92 @@ usersRouter.use(requireAuth);
 
 usersRouter.get('/me', (req, res) => {
   res.json(publicUser(req.user));
+});
+
+usersRouter.get('/me/export', async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const [profile, memberships, submissions, attempts, ledger, badges, notifications] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, displayName: true, role: true, status: true, schoolId: true, createdAt: true } }),
+      prisma.classMembership.findMany({ where: { userId }, include: { class: { include: { school: { select: { id: true, name: true } } } } } }),
+      prisma.submission.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, include: { task: { select: { id: true, title: true } }, asset: { select: { mimeType: true, size: true, createdAt: true } } } }),
+      prisma.quizAttempt.findMany({ where: { userId }, orderBy: { submittedAt: 'desc' }, include: { quiz: { select: { id: true, title: true } } } }),
+      prisma.pointLedger.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
+      prisma.userBadge.findMany({ where: { userId }, include: { badge: { select: { name: true, description: true } } } }),
+      prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, select: { type: true, payload: true, readAt: true, createdAt: true } }),
+    ]);
+    if (!profile) {
+      next(notFound());
+      return;
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="ecoquest-data-${userId}.json"`);
+    res.json({ exportedAt: new Date().toISOString(), profile, memberships, submissions, quizAttempts: attempts, pointLedger: ledger, badges, notifications });
+  } catch (error) {
+    next(error);
+  }
+});
+
+usersRouter.delete('/me', validate({
+  body: z.object({ confirmation: z.literal('DELETE MY ACCOUNT') }),
+}), async (req, res, next) => {
+  try {
+    if (req.user.role === 'ADMIN') {
+      const activeAdmins = await prisma.user.count({ where: { role: 'ADMIN', status: 'ACTIVE' } });
+      if (activeAdmins <= 1) {
+        next(conflict('The last active admin account cannot be deleted'));
+        return;
+      }
+    }
+    const assets = await prisma.uploadAsset.findMany({ where: { userId: req.user.id } });
+    try {
+      for (const asset of assets) await removeStoredAsset(asset);
+    } catch {
+      next(new AppError(503, 'EVIDENCE_CLEANUP_FAILED', 'Evidence could not be fully removed. Try again later.'));
+      return;
+    }
+    const replacementPasswordHash = await bcrypt.hash(randomBytes(32).toString('hex'), 12);
+    const deletedAt = new Date();
+    await prisma.$transaction(async (tx) => {
+      const assetIds = assets.map((asset) => asset.id);
+      await tx.submission.updateMany({
+        where: { userId: req.user.id },
+        data: { text: null, reviewNote: null, assetId: null },
+      });
+      if (assetIds.length) await tx.submission.updateMany({ where: { assetId: { in: assetIds } }, data: { assetId: null } });
+      await tx.submission.updateMany({ where: { reviewerId: req.user.id }, data: { reviewerId: null } });
+      await tx.uploadAsset.deleteMany({ where: { userId: req.user.id } });
+      await tx.passwordResetToken.deleteMany({ where: { userId: req.user.id } });
+      await tx.notification.deleteMany({ where: { userId: req.user.id } });
+      await tx.userBadge.deleteMany({ where: { userId: req.user.id } });
+      await tx.classMembership.deleteMany({ where: { userId: req.user.id } });
+      await tx.lesson.updateMany({ where: { authorId: req.user.id }, data: { authorId: null } });
+      await tx.quiz.updateMany({ where: { authorId: req.user.id }, data: { authorId: null } });
+      await tx.task.updateMany({ where: { authorId: req.user.id }, data: { authorId: null } });
+      await tx.user.update({
+        where: { id: req.user.id },
+        data: {
+          email: `deleted-${req.user.id}@deleted.invalid`,
+          displayName: 'Deleted account',
+          passwordHash: replacementPasswordHash,
+          status: 'SUSPENDED',
+          schoolId: null,
+          tokenVersion: { increment: 1 },
+        },
+      });
+      await writeAudit(tx, {
+        actorId: req.user.id,
+        action: 'USER_ERASE',
+        entityType: 'User',
+        entityId: req.user.id,
+        metadata: { requestedAt: deletedAt.toISOString(), retainedRecords: ['quizAttempts', 'pointLedger', 'auditEvents'] },
+      });
+    });
+    res.json({ success: true, message: 'Account identifiers and uploaded evidence were removed. Required score and audit history remain under an anonymized record.' });
+  } catch (error) {
+    next(error);
+  }
 });
 
 usersRouter.patch('/me', validate({

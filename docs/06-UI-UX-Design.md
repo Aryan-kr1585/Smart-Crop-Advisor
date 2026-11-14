@@ -27,7 +27,7 @@ flowchart TD
 - **Quiz:** clear progress, keyboard controls, confirmation, result and explanation.
 - **Task/submission:** criteria, deadline, accepted evidence, upload progress, review status, resubmission rules.
 - **Leaderboard:** explicit scope/period, privacy-preserving names, accessible ranking and non-punitive presentation.
-- **Profile/achievements:** personal history, badge criteria, points ledger, approved privacy controls.
+- **Profile/achievements:** personal history, badge criteria, points ledger, JSON data export, and typed-confirmation account deletion with clear explanation of retained anonymized history.
 - **Teacher dashboard:** only assigned classes; roster, content tools, pending reviews, progress summaries. Class selection spans paginated assigned classes; roster and review lists can load subsequent pages. Teachers can edit authored lessons/tasks and author/edit quizzes with multiple questions until the first attempt. Review shows criteria/evidence, safe preview fallback, decision and feedback.
 - **Admin dashboard:** users, schools/classes, content, challenges/badges, activity; school, class, member-candidate, user, task, and challenge lists can load subsequent pages. Admins can edit lessons, tasks, and quizzes before attempts, and change challenge dates, scope, tasks, and lifecycle status. Privileged changes are audited.
 

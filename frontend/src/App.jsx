@@ -32,6 +32,7 @@ function linksFor(role) {
       { to: '/admin', label: 'Overview', end: true },
       { to: '/admin/people', label: 'People' },
       { to: '/admin/content', label: 'Content' },
+      { to: '/admin/profile', label: 'Profile and data' },
     ];
   }
   if (role === 'TEACHER') {
@@ -39,6 +40,7 @@ function linksFor(role) {
       { to: '/teach', label: 'Overview', end: true },
       { to: '/teach/content', label: 'Lessons and tasks' },
       { to: '/teach/reviews', label: 'Reviews' },
+      { to: '/teach/profile', label: 'Profile and data' },
     ];
   }
   return [
@@ -76,11 +78,13 @@ export default function App() {
         <Route path="/teach" element={<TeachHome />} />
         <Route path="/teach/content" element={<TeachContent />} />
         <Route path="/teach/reviews" element={<ReviewPage />} />
+        <Route path="/teach/profile" element={<ProfilePage />} />
       </Route>
       <Route element={<RequireAuth roles={['ADMIN']} />}>
         <Route path="/admin" element={<AdminHome section="overview" />} />
         <Route path="/admin/people" element={<AdminHome section="people" />} />
         <Route path="/admin/content" element={<AdminHome section="content" />} />
+        <Route path="/admin/profile" element={<ProfilePage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

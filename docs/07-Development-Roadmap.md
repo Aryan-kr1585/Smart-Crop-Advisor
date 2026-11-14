@@ -8,7 +8,7 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 
 ## Phase 1 – Data model and persistence
 - **Status: IMPLEMENTED; FRESH DATABASE VERIFIED.** Prisma models cover schools/classes, users, lessons/quizzes, tasks/submissions, uploads, points, badges, challenges, notifications, and audit records. Initial migration is checked in under `database/prisma/migrations`.
-- `npm run setup` invokes Prisma using `database/prisma/schema.prisma` and then the backend seed runner. The migration was generated, applied, and seeded against a disposable PostgreSQL 18 database. Privacy/retention policy remains open.
+- `npm run setup` invokes Prisma using `database/prisma/schema.prisma` and then the backend seed runner. The migration was generated, applied, and seeded against a disposable PostgreSQL 18 database. User export and anonymizing deletion are implemented; retention and backup expiry policy remain open.
 
 ## Phase 2 – API foundation and authentication
 - **Status: IMPLEMENTED; VERIFICATION PENDING.** Express app, validated env, Prisma client, safe errors, JWT auth/revocation, bcrypt, RBAC, rate limits, Helmet, CORS, health endpoint, and single-use password recovery are present. Production recovery requires Resend configuration.
@@ -27,7 +27,7 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - Add integration coverage for full journeys, error/retry states, authorization boundaries, and concurrent review/attempt behavior.
 
 ## Phase 6 – Engagement and accessibility
-- **Status: PARTIAL.** Points, levels, streaks, badges, challenges, and leaderboard are implemented. Review semantic/keyboard/screen-reader behavior and approve ranking, scoring, consent, language, and retention policy.
+- **Status: PARTIAL.** Points, levels, streaks, badges, challenges, leaderboard, user export, and account anonymization are implemented. Review semantic/keyboard/screen-reader behavior and approve ranking, scoring, consent, language, and retention policy.
 
 ## Phase 7 – Release quality and security
 - **Status: NOT COMPLETE.** One scoring test exists; schema validation and a frontend production build passed, but the test suite was not run. Backend install reported four high severity dependency findings, including a Multer 1.x deprecation. Add API/integration/authz/upload/UI coverage, review dependency findings, and complete privacy/accessibility checks with synthetic data.

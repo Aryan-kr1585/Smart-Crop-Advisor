@@ -6,7 +6,7 @@ The API includes a Node.js test for scoring. Prisma schema validation, migration
 | Type | Required focus |
 |---|---|
 | Unit | Domain rules, Zod schemas, scoring, badge criteria, date boundaries |
-| API | Contracts, status/errors, validation, pagination, rate limits |
+| API | Contracts, status/errors, validation, pagination, rate limits, own-data export, account erasure and evidence cleanup |
 | Integration | Express + Prisma + disposable PostgreSQL, migrations and transactions |
 | Authentication | Registration, bcrypt, invalid/expired JWT and password-reset tokens, single-use reset, generic reset responses, session revocation, logout policy |
 | Authorization | Roles, school/class scope, ownership, admin-only routes, direct API access |
@@ -19,7 +19,7 @@ The API includes a Node.js test for scoring. Prisma schema validation, migration
 Use synthetic fixtures only, never real student data or production credentials.
 
 ## Security and privacy
-Use bcrypt; managed JWT secrets; Zod validation; server-side resource authorization; HTTPS; restrictive CORS; auth/upload rate limits; secure headers; reviewed dependencies; Prisma parameterized queries. Restrict uploads and verify ownership/size/type server-side. Logs must omit passwords, tokens, private URLs, and unnecessary student details. Decide consent/age, minimization, access/export/deletion, evidence retention, incident handling, leaderboard visibility, and applicable legal duties before production.
+Use bcrypt; managed JWT secrets; Zod validation; server-side resource authorization; HTTPS; restrictive CORS; auth/upload rate limits; secure headers; reviewed dependencies; Prisma parameterized queries. Restrict uploads and verify ownership/size/type server-side. Logs must omit passwords, tokens, private URLs, and unnecessary student details. Export and user-requested evidence deletion are implemented; approve consent/age, minimization, retention periods, backup expiry, incident handling, leaderboard visibility, and applicable legal duties before production.
 
 ## Local setup and environment
 Package manifests, lockfiles, Node 24 pin, and scripts exist. See the repository [README](../README.md) for local setup. Use local PostgreSQL or non-production Neon; configure placeholder-only env; apply the checked-in Prisma migration; start API/client with documented scripts and local CORS/API URL. Fresh migration and seed were exercised on a disposable database.

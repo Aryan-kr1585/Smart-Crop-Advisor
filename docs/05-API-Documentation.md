@@ -15,7 +15,9 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Auth | POST `/auth/password-reset-requests` | Request recovery; public, generic response | `{email}` → `{success:true,message}`; dev also returns a local link | 422,429 |
 | Auth | POST `/auth/password-resets` | Set password with one-time token; public | `{token,password}` → `{success:true,message}` | 400,422,429 |
 | Users | GET `/users/me` | Current profile; any auth | → `{id,displayName,role,schoolId}` | 401 |
+| Users | GET `/users/me/export` | Download own profile and activity data; any auth | → JSON attachment; `Cache-Control: no-store` | 401 |
 | Users | PATCH `/users/me` | Edit permitted fields; any auth | `{displayName}` → profile | 401,422 |
+| Users | DELETE `/users/me` | Request anonymizing deletion; any auth | `{confirmation:"DELETE MY ACCOUNT"}` → `{success:true}` | 401,409,422,503 |
 | Users | GET `/users` | Search/manage; admin or scoped teacher | `?schoolId&classId&cursor&limit` → `{items,nextCursor}` | 401,403,422 |
 | Schools | GET `/schools` | List; authenticated, scope applied | pagination → `{items,nextCursor}` | 401,403 |
 | Schools | POST `/schools` | Create; admin | `{name}` → `{id,name}` | 401,403,409,422 |
@@ -52,4 +54,4 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Notifications | GET `/notifications` | Own notices; auth | `?unread&cursor&limit` → `{items,nextCursor}` | 401,422 |
 | Notifications | PATCH `/notifications/:id/read` | Mark own read; auth | `{}` → `{id,readAt}` | 401,404 |
 
-Do not expose password hashes, reset-token hashes, answer keys before submission, private student data, provider secrets, or another user's records. Password reset tokens expire after 30 minutes, work once, and invalidate prior sessions; only development responses include the raw local reset link. Quiz edits are rejected after the first attempt to preserve recorded score meaning. Use idempotency for awards/reviews. Update this contract when API changes.
+Do not expose password hashes, reset-token hashes, answer keys before submission, private student data, provider secrets, or another user's records. Password reset tokens expire after 30 minutes, work once, and invalidate prior sessions; only development responses include the raw local reset link. Account deletion removes direct identifiers, authored-content attribution, and uploaded evidence but retains pseudonymous quiz, point-ledger, and audit history; retention duration and backup expiry remain policy decisions. Quiz edits are rejected after the first attempt to preserve recorded score meaning. Use idempotency for awards/reviews. Update this contract when API changes.
