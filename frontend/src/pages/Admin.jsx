@@ -5,6 +5,7 @@ import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
 import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 import { EditableLesson, EditableTask } from '../components/ContentEditors.jsx';
 import { QuizManager } from '../components/QuizManager.jsx';
+import { ChallengeManager } from '../components/ChallengeManager.jsx';
 
 export function AdminHome({ section }) {
   const schools = useInfiniteQuery({
@@ -12,7 +13,7 @@ export function AdminHome({ section }) {
     initialPageParam: null,
     queryFn: ({ pageParam }) => api(pageUrl('/schools', pageParam)),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    enabled: section === 'overview',
+    enabled: section === 'overview' || section === 'content',
   });
   const users = useInfiniteQuery({
     queryKey: ['users'],
@@ -182,6 +183,7 @@ export function AdminHome({ section }) {
           });
           setMessage('Challenge created.');
           setError(null);
+          queryClient.invalidateQueries({ queryKey: ['challenges', 'admin'] });
         } catch (err) { setError(err); }
       }}>
         <h2>New challenge</h2>
@@ -201,6 +203,7 @@ export function AdminHome({ section }) {
         <LoadMore query={tasks} label="tasks" />
         <button type="submit">Create challenge</button>
       </form>
+      <ChallengeManager tasks={tasks} schools={schools} />
       <section className="stack">
         <QuizManager lessons={lessons} />
       </section>

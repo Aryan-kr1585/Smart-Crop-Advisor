@@ -20,7 +20,7 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 
 ## Phase 4 – Role-based client
 - **Status: MVP IMPLEMENTED; POLISH PENDING.** React/Vite has public, student, teacher, and admin routes for learning, activities, progress, content authoring, reviews, and school/account setup. Cursor-backed lists now expose load-more controls, and teachers can select among assigned classes.
-- Teachers and admins can author/edit quizzes with 1–20 questions and configure attempt limits. Quiz changes are locked after the first attempt; challenge lifecycle management and class editing remain limited.
+- Teachers and admins can author/edit quizzes with 1–20 questions and configure attempt limits. Quiz changes are locked after the first attempt. Admins can edit challenge dates, status, school scope, details, and linked tasks; class editing remains limited.
 
 ## Phase 5 – Integrated journeys
 - **Status: IMPLEMENTED IN CODE; NOT VERIFIED END TO END.** Client calls the API for registration/login, learning, quiz attempts, submissions/evidence, review, awards, and notices.

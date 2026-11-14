@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
-import { conflict, notFound } from '../lib/errors.js';
+import { AppError, conflict, notFound } from '../lib/errors.js';
 import { cursorWhere, pageResult } from '../lib/pagination.js';
 import { writeAudit } from '../lib/progress.js';
 import { validate } from '../middleware/validate.js';
@@ -126,6 +126,9 @@ challengesRouter.post('/', requireRoles('TEACHER', 'ADMIN'), validate({
     if (new Date(body.endsAt) <= new Date(body.startsAt)) {
       ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'End must be after start' });
     }
+    if (new Set(body.taskIds).size !== body.taskIds.length) {
+      ctx.addIssue({ code: 'custom', path: ['taskIds'], message: 'Tasks must not be repeated' });
+    }
   }),
 }), async (req, res, next) => {
   try {
@@ -157,6 +160,68 @@ challengesRouter.post('/', requireRoles('TEACHER', 'ADMIN'), validate({
       endsAt: challenge.endsAt,
       status: challenge.status,
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+challengesRouter.patch('/:challengeId', requireRoles('ADMIN'), validate({
+  params: z.object({ challengeId: z.string().uuid() }),
+  body: z.object({
+    title: z.string().trim().min(3).max(140).optional(),
+    description: z.string().trim().min(4).max(2000).optional(),
+    startsAt: z.string().datetime().optional(),
+    endsAt: z.string().datetime().optional(),
+    status: z.enum(['DRAFT', 'ACTIVE', 'ENDED']).optional(),
+    schoolId: z.string().uuid().nullable().optional(),
+    taskIds: z.array(z.string().uuid()).min(1).max(20).optional(),
+  }).refine((body) => Object.keys(body).length > 0, { message: 'No changes provided' })
+    .refine((body) => !body.taskIds || new Set(body.taskIds).size === body.taskIds.length, {
+      path: ['taskIds'], message: 'Tasks must not be repeated',
+    }),
+}), async (req, res, next) => {
+  try {
+    const challenge = await prisma.$transaction(async (tx) => {
+      const existing = await tx.challenge.findUnique({ where: { id: req.params.challengeId } });
+      if (!existing) throw notFound();
+      const startsAt = req.body.startsAt ? new Date(req.body.startsAt) : existing.startsAt;
+      const endsAt = req.body.endsAt ? new Date(req.body.endsAt) : existing.endsAt;
+      if (endsAt <= startsAt) {
+        throw new AppError(422, 'VALIDATION_ERROR', 'Request could not be processed', [
+          { path: 'endsAt', message: 'End must be after start' },
+        ]);
+      }
+      if (req.body.schoolId) {
+        const school = await tx.school.findUnique({ where: { id: req.body.schoolId }, select: { id: true } });
+        if (!school) throw notFound('School not found');
+      }
+      if (req.body.taskIds) {
+        const tasks = await tx.task.findMany({ where: { id: { in: req.body.taskIds } }, select: { id: true } });
+        if (tasks.length !== req.body.taskIds.length) throw notFound('One or more tasks were not found');
+        await tx.challengeTask.deleteMany({ where: { challengeId: existing.id } });
+        await tx.challengeTask.createMany({ data: req.body.taskIds.map((taskId) => ({ challengeId: existing.id, taskId })) });
+      }
+      const updated = await tx.challenge.update({
+        where: { id: existing.id },
+        data: {
+          ...(req.body.title !== undefined ? { title: req.body.title } : {}),
+          ...(req.body.description !== undefined ? { description: req.body.description } : {}),
+          ...(req.body.startsAt !== undefined ? { startsAt } : {}),
+          ...(req.body.endsAt !== undefined ? { endsAt } : {}),
+          ...(req.body.status !== undefined ? { status: req.body.status } : {}),
+          ...(req.body.schoolId !== undefined ? { schoolId: req.body.schoolId } : {}),
+        },
+      });
+      await writeAudit(tx, {
+        actorId: req.user.id,
+        action: 'CHALLENGE_UPDATE',
+        entityType: 'Challenge',
+        entityId: updated.id,
+        metadata: { changedFields: Object.keys(req.body) },
+      });
+      return updated;
+    });
+    res.json({ id: challenge.id, title: challenge.title, startsAt: challenge.startsAt, endsAt: challenge.endsAt, status: challenge.status, schoolId: challenge.schoolId });
   } catch (error) {
     next(error);
   }

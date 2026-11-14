@@ -33,13 +33,14 @@
 - Added cursor-based load-more controls for student lessons, tasks, challenges, points history, notices, and leaderboard; teacher rosters, reviews, content lists, classes; and admin schools, people, class rosters, and task choices. Teachers can select an assigned class.
 - Added lesson and task edit forms for teachers and admins, with edit controls shown only where the API reports permission. Lesson/task APIs retain server-side author/admin authorization.
 - Added teacher/admin quiz management with multi-question authoring, edit controls, optional unlimited attempts, and a server-side lock after any student attempt. Added paginated quiz listing and documented the API contract.
+- Added an admin challenge manager for dates, status, school scope, details, and linked tasks, with server-side validation and audit logging.
 
 ## Remaining work
 
 - Confirm the official title/problem statement and approve age/consent, privacy, evidence retention, moderation, and leaderboard policies.
 - Add broader migration/seed regression coverage and ensure deployment uses the checked-in migration history.
 - Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
-- Add challenge lifecycle editing and account recovery/retention workflows; improve summary-card counts where they currently show only an initial page preview.
+- Add account recovery/retention workflows; improve summary-card counts where they currently show only an initial page preview.
 - Configure and verify CI/deployment, backups, monitoring, and rollback before release.
 - Review the dependency audit findings reported during backend installation (four high severity findings; Multer 1.x is deprecated).
 
