@@ -5,13 +5,13 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "db:migrate": "prisma migrate dev",
-    "db:seed": "node prisma/seed.js",
-    "db:setup": "prisma migrate dev --name init && node prisma/seed.js",
+    "db:migrate": "prisma migrate dev --schema ../database/prisma/schema.prisma",
+    "db:seed": "node scripts/db/seed.js",
+    "db:setup": "prisma migrate dev --schema ../database/prisma/schema.prisma --name init && node scripts/db/seed.js",
     "test": "node --test"
   },
   "prisma": {
-    "seed": "node prisma/seed.js"
+    "seed": "node scripts/db/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",

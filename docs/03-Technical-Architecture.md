@@ -1,7 +1,7 @@
 # 3. Technical Architecture
 
 ## Constraints and target stack
-**JavaScript only:** backend files `.js` with ES Modules; React components `.jsx`; never create `.ts`/`.tsx`. Keep `client/` and `server/` separate. PostgreSQL is primary; Prisma handles data access and migrations. This is proposed; no implementation was found.
+**JavaScript only:** backend files `.js` with ES Modules; React components `.jsx`; never create `.ts`/`.tsx`. Keep `frontend/`, `backend/`, and `database/` as separate top-level areas. PostgreSQL is primary; Prisma handles data access and migrations. These components are implemented; hosted services and production topology remain proposed.
 
 | Layer | Technology |
 |---|---|
@@ -52,10 +52,13 @@ Use bcrypt; never store/log plaintext passwords. JWT secrets belong in environme
 
 Vercel serves client; Render runs API; Neon hosts PostgreSQL; Cloudinary stores evidence. Separate environment credentials, CORS allowlists, HTTPS, health checks, backups, and reviewed migrations. GitHub Actions should run approved build/checks and deploy by environment policy.
 
-## Recommended future layout
+## Repository layout
 ```text
-client/src/{app,components,features,hooks,lib,pages,services,styles}
-server/prisma/{schema.prisma,migrations,seed.js}
-server/src/{config,middleware,modules,lib,app.js,server.js}
+frontend/src/{components,lib,pages,App.jsx,main.jsx,styles.css}
+backend/src/{config,middleware,modules,lib,routes,app.js,server.js}
+backend/scripts/db/seed.js
+database/prisma/{schema.prisma,migrations}
+docs/
+package.json
 ```
-These are recommendations, not files created. See [Testing and Deployment](08-Testing-and-Deployment.md).
+Root npm scripts install and run frontend/backend packages and call Prisma with the schema under `database/`. See [Testing and Deployment](08-Testing-and-Deployment.md).

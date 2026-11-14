@@ -4,6 +4,6 @@ dist/
 .env.*
 !.env.example
 .pgdata/
-server/uploads/
+backend/uploads/
 *.log
 .DS_Store

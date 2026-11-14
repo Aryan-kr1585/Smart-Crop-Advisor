@@ -204,7 +204,7 @@ export function TaskList() {
   );
 }
 
-function Evidence({ assetId }) {
+export function Evidence({ assetId, alt = 'Submitted evidence' }) {
   const [url, setUrl] = useState('');
   useEffect(() => {
     if (!assetId) return undefined;
@@ -224,7 +224,7 @@ function Evidence({ assetId }) {
   }, [assetId]);
   if (!assetId) return null;
   if (!url) return <p className="status" role="status">Loading image…</p>;
-  return <img className="evidence" src={url} alt="Your submitted evidence" />;
+  return <img className="evidence" src={url} alt={alt} />;
 }
 
 export function TaskDetail() {
@@ -286,7 +286,7 @@ export function TaskDetail() {
                 <h2>{data.mySubmission ? 'Submit again' : 'Submit your work'}</h2>
                 <ErrorList error={error} />
                 <Field label="What did you do?">
-                  <textarea name="text" maxLength={4000} required />
+                  <textarea name="text" maxLength={4000} />
                 </Field>
                 <Field label="Optional photo, JPEG PNG or WebP, up to 5 MB. Do not include faces.">
                   <input name="file" type="file" accept="image/jpeg,image/png,image/webp" />

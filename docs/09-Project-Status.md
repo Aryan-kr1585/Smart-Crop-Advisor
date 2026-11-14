@@ -1,39 +1,38 @@
 # 9. Project Status
 
-**Inspection date:** 2026-11-11 (Asia/Kolkata)
+**Inspection date:** 2026-11-14 (Asia/Kolkata)
 
 ## Observed repository state
+
 | Area | State |
 |---|---|
-| Path/name | `Smart-Crop-Advisor` |
-| Branch/Git | `main`; no commits yet; `origin/main` gone; clean before documentation; no tracked files |
-| Existing files | Only `.git` before this task; no client/server/application files |
-| Dependencies | No package manifests or dependencies |
-| Frontend | No React/Vite files/config |
-| Backend/API | No Express routes/controllers/services/endpoints |
-| Database | No Prisma schema/migrations/PostgreSQL configuration |
-| Authentication | No implementation |
-| Environment | No env config/example found; no secret values read or exposed |
-| Tests/deployment | No tests/configuration, Render/Vercel files, or Actions workflows |
+| Repository identity | `Smart-Crop-Advisor`, branch `main`; local Git status inspected before edits |
+| Top-level layout | `frontend/` for React/Vite; `backend/` for Express/runtime/tests; `database/` for Prisma schema and migrations; `docs/` for project documentation |
+| Product scope | Implemented code and package names call the product EcoQuest (environmental education); the supplied title describes crop advisory. Official scope needs confirmation |
+| Frontend | React/Vite client with public, student, teacher, and admin routes |
+| Backend | Express API with auth, validation, RBAC, rate limiting, errors, and health endpoint |
+| Database | Prisma PostgreSQL schema and demo seed; no migration checked in |
+| Core workflows | Lessons, quiz authoring/attempts, tasks/submissions/review, points, badges, challenges, leaderboard, notices, schools/classes, account management |
+| Uploads | Local API disk path by default; optional Cloudinary signing/retrieval support; consent and retention policy unresolved |
+| Tests | One scoring test file; no tests or build run for this pass |
+| Deployment | No CI workflow or production deployment configuration found |
+| Secrets | `.env` exists locally and is ignored; its values were not read or changed |
 
-## Workstream status
-| Workstream | Status | Evidence / next step |
-|---|---|---|
-| Official title/problem | NEEDS CONFIRMATION | Crop-advisory title conflicts with environmental-student description; obtain faculty decision |
-| Documentation | IN PROGRESS | This set created; stakeholder review/approval remains |
-| Setup, frontend, backend, database, authentication, testing, deployment | NOT STARTED | No corresponding implementation/configuration exists |
-| API | NOT STARTED | Proposed endpoints in [API Documentation](05-API-Documentation.md), none implemented |
+## Work completed in this pass
 
-## Completed / pending / blocked / unknown
-**Completed:** repository structure, Git branch/status, and tracked files inspected; documentation files prepared.
+- Fixed registration to populate the shared React Query auth state without a hard page reload.
+- Matched the submission form to the API's existing image-only evidence support.
+- Added evidence image display to teacher review cards.
+- Rejected duplicate answers to the same quiz question at request validation.
+- Replaced stale setup/status/roadmap documentation with the observed implementation, setup steps, known limits, and verification state.
+- Moved client, API, Prisma schema, seed runner, env example, and test files into frontend/backend/database areas; updated root scripts and local setup documentation.
 
-**Pending:** confirm official title/scope; approve MVP, privacy/consent, points, and UI decisions; review documentation; establish repository remote/ownership and implementation only after approval.
+## Remaining work
 
-**Blocked:** no implementation is marked blocked; product implementation depends on scope/title confirmation and documentation approval.
+- Confirm the official title/problem statement and approve age/consent, privacy, evidence retention, moderation, and leaderboard policies.
+- Generate/review/check in Prisma migration history and add dependency lockfiles plus a supported Node version.
+- Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
+- Complete pagination and class selection in list screens; add full content editing and recovery/retention workflows.
+- Configure and verify CI/deployment, backups, monitoring, and rollback before release.
 
-**Unknown:** whether repository is for EcoQuest or Smart Crop Advisor; faculty-approved requirements; team/release ownership; Node version; target ages and data policy; score/moderation/upload/leaderboard rules; deployment accounts.
-
-## Next recommended action
-Obtain written title/problem-statement confirmation, then review and approve proposed scope and privacy requirements. Keep implementation status NOT STARTED until code and verification exist.
-
-Labels: **COMPLETED** verified done; **IN PROGRESS** underway; **NOT STARTED** no implementation; **BLOCKED** specific dependency prevents progress; **NEEDS CONFIRMATION** stakeholder decision required.
+No stakeholder approval, end-to-end verification, deployment, or impact outcome is claimed. See [Roadmap](07-Development-Roadmap.md), [Testing and Deployment](08-Testing-and-Deployment.md), and [README](../README.md).

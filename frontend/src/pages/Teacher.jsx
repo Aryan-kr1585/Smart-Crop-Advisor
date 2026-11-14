@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
+import { Evidence } from './Student.jsx';
 
 export function TeachHome() {
   const classes = useQuery({ queryKey: ['my-school'], queryFn: () => api('/schools') });
@@ -214,6 +215,7 @@ export function ReviewPage() {
                 <h2>{item.task.title}</h2>
                 <p>{item.student.displayName} · {item.status.toLowerCase()} · {item.task.points} eco-points</p>
                 {item.text && <p>{item.text}</p>}
+                <Evidence assetId={item.assetId} alt={`Evidence submitted by ${item.student.displayName}`} />
                 {item.status === 'PENDING' && (
                   <ReviewActions
                     onApprove={() => review.mutate({ id: item.id, decision: 'APPROVED' })}

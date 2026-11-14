@@ -10,7 +10,7 @@ The repository is named `Smart-Crop-Advisor`, but the proposed EcoQuest scope co
 5. Backend uses JavaScript `.js` and ES Modules.
 6. React components use JSX `.jsx`.
 7. Use PostgreSQL and Prisma ORM/migrations.
-8. Keep frontend/backend separate; follow documented architecture.
+8. Keep `frontend/`, `backend/`, and `database/` as separate top-level areas; keep runtime API code out of the database package and keep the Prisma schema/migrations in `database/`.
 9. Never invent existing functionality.
 10. Inspect code and Git state before modifying.
 11. Work phase by phase.
@@ -30,4 +30,4 @@ Frontend: React, Vite, JavaScript/JSX, React Router, TanStack Query, CSS Modules
 ## Mandatory workflow
 **READ DOCUMENTATION → INSPECT EXISTING CODE → UNDERSTAND REQUIREMENTS → PLAN IMPLEMENTATION → WRITE CODE → TEST → FIX ERRORS → UPDATE DOCUMENTATION → UPDATE PROJECT STATUS**
 
-The title/scope contradiction must be resolved before product implementation. Proposals are not proof of implementation or stakeholder approval. See [Overview](docs/01-Project-Overview.md), [Requirements](docs/02-Requirements-and-Features.md), and [Roadmap](docs/07-Development-Roadmap.md).
+The title/scope contradiction must be resolved before presenting or deploying the product as final. The current implementation uses the provisional EcoQuest environmental-education scope because that is what the code implements; it does not establish faculty approval and it does not implement crop advisory. Keep this distinction visible in docs and user-facing claims until the owner confirms the official scope. See [Overview](docs/01-Project-Overview.md), [Requirements](docs/02-Requirements-and-Features.md), and [Roadmap](docs/07-Development-Roadmap.md).

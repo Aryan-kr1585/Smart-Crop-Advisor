@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { api, homeFor, setToken } from '../lib/api.js';
+import { api, homeFor } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
 import { ErrorList, Field } from '../components/Shell.jsx';
 
@@ -85,7 +85,7 @@ export function Login() {
 }
 
 export function Register() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [pending, setPending] = useState(false);
@@ -103,10 +103,8 @@ export function Register() {
         method: 'POST',
         body: { email, password, displayName: form.get('displayName') },
       });
-      const session = await api('/auth/login', { method: 'POST', body: { email, password } });
-      setToken(session.accessToken);
+      await login(email, password);
       navigate('/learn');
-      window.location.assign('/learn');
     } catch (err) {
       setError(err);
       setPending(false);

@@ -31,6 +31,18 @@ const quizBody = z.object({
   questions: z.array(questionSchema).min(1).max(20),
 });
 
+const attemptBody = z.object({
+  answers: z.array(z.object({
+    questionId: z.string().uuid(),
+    optionId: z.string().uuid(),
+  })).min(1),
+}).superRefine((body, ctx) => {
+  const questionIds = body.answers.map((answer) => answer.questionId);
+  if (new Set(questionIds).size !== questionIds.length) {
+    ctx.addIssue({ code: 'custom', path: ['answers'], message: 'Each question can be answered only once' });
+  }
+});
+
 function publicQuiz(quiz, revealAnswers) {
   return {
     id: quiz.id,
@@ -132,12 +144,7 @@ quizzesRouter.post('/', requireRoles('TEACHER', 'ADMIN'), validate({ body: quizB
 
 quizzesRouter.post('/:quizId/attempts', requireRoles('STUDENT'), validate({
   params: z.object({ quizId: z.string().uuid() }),
-  body: z.object({
-    answers: z.array(z.object({
-      questionId: z.string().uuid(),
-      optionId: z.string().uuid(),
-    })).min(1),
-  }),
+  body: attemptBody,
 }), async (req, res, next) => {
   try {
     const quiz = await prisma.quiz.findUnique({

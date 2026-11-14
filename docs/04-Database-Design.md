@@ -1,6 +1,6 @@
 # 4. Database Design
 
-**Proposed schema only:** no Prisma schema, database configuration, or migration exists. No database was accessed or modified. Confirm privacy, retention, membership, and scoring policies before finalizing.
+**Implemented schema:** `database/prisma/schema.prisma` defines the PostgreSQL model and `backend/scripts/db/seed.js` supplies synthetic development records. No migration is checked in and this inspection did not access or modify a database. Confirm privacy, retention, membership, and scoring policies before production.
 
 ## ER diagram
 ```mermaid

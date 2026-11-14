@@ -1,7 +1,7 @@
 # 1. Project Overview
 
 ## Introduction
-**EcoQuest** is the provisional name for a proposed gamified environmental education platform for school and college students in India. It connects environmental learning with practical actions at school, home, and in the community. The inspected `Smart-Crop-Advisor` repository had no application files.
+**EcoQuest** is the provisional name used by the implemented MVP: an environmental education platform for school and college students in India. It connects environmental learning with practical actions at school, home, and in the community. The repository name and supplied title still conflict with this scope.
 
 ## Problem statement and discrepancy
 The supplied project record is titled **“Smart Crop Advisory System for Small and Marginal Farmers”**, while its description concerns environmental education, student engagement, sustainability tasks, points, and competitions. These are different products. **Official project title and faculty-approved problem statement: NEEDS CONFIRMATION.** Until confirmed, this documentation uses the environmental education description as provisional scope; it does not claim crop advisory functionality.
@@ -38,4 +38,4 @@ Proposed outcomes are a web platform for lessons, quizzes, sustainable tasks, su
 | Challenge | Time-bounded activity/competition with eligibility rules |
 | RBAC | Role-based access control |
 
-All features and architecture are proposed unless marked implemented. See [Project Status](09-Project-Status.md).
+The repository now implements a development MVP for the provisional EcoQuest scope. Scope, privacy and consent decisions remain unapproved. See [Project Status](09-Project-Status.md).

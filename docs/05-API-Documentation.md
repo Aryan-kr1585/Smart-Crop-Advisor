@@ -1,12 +1,12 @@
 # 5. API Documentation
 
-**All endpoints below are PROPOSED — NOT IMPLEMENTED.** Repository has no API code. Draft contracts need review.
+**API implementation exists** under `backend/src/modules/`. The catalogue below describes intended routes but should be read with the route code as authority; the implementation and table are not yet fully reconciled. Upload config/local retrieval and some response details are omitted from this catalogue.
 
 ## Conventions
 Base `/api/v1`; HTTPS; JSON except upload negotiation; plural nouns, camelCase, ISO-8601 UTC, stable IDs. Zod validates params/query/body. Never trust client role, points, score, or ownership. Paginate lists with bounded `limit` and a cursor strategy to finalize. Proposed error: `{"error":{"code":"VALIDATION_ERROR","message":"Request could not be processed","details":[]}}`. Statuses: 200 read/update, 201 create, 204 empty success, 400 malformed, 401 unauthenticated, 403 forbidden, 404 unavailable/out of scope, 409 conflict, 422 semantic validation, 429 rate limited, 500 unexpected. Bearer JWT is draft; transport/refresh/CSRF decision pending.
 
 ## Endpoint catalogue
-Each entry includes method, URL, purpose, auth/role, representative request/response, and common errors. **Status for every entry: NOT IMPLEMENTED.**
+Each entry includes method, URL, purpose, auth/role, representative request/response, and common errors. Most catalogued routes are implemented; see the modules for exact request/response shapes and validation.
 | Area | Method URL | Purpose; auth/role | Request → response example | Errors |
 |---|---|---|---|---|
 | Auth | POST `/auth/register` | Create account; public/policy pending | `{email,password,displayName}` → `{user:{id,email,role}}` | 400,409,422,429 |

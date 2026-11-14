@@ -1,39 +1,52 @@
 # EcoQuest (provisional)
 
-> **Project identity needs confirmation.** The repository is `Smart-Crop-Advisor`; the supplied title is “Smart Crop Advisory System for Small and Marginal Farmers,” while the supplied description and requested features describe environmental education for Indian students. This README documents the environmental education scope provisionally. Confirm the faculty-approved title/problem statement before implementation.
+EcoQuest is a web MVP for environmental learning and student activities. The repository name and supplied project title refer to crop advisory, while the implementation is an environmental education platform. The official title/problem statement still needs confirmation; this repository does not implement crop recommendations.
 
-## Description
-EcoQuest is a proposed platform to help school and college students learn about environmental issues through lessons, quizzes, real-world sustainability tasks, and school participation. Students may earn traceable eco-points and badges; teachers/coordinators may manage content and review submissions. These are goals, not measured impact claims.
+## Current implementation
 
-## Problem and planned features
-The proposed scope addresses the gap between theoretical environmental learning and practical participation. Planned features: student learning and progress; teacher-managed content and task review; admin management of users/schools/content; points ledger, badges, and approved-scope leaderboard; optional evidence-image upload subject to privacy decisions. **Not implemented.**
+- React 18, Vite, React Router, and TanStack Query client with student, teacher, and admin areas.
+- Express REST API with Zod validation, JWT authentication, bcrypt password hashing, role checks, and Prisma/PostgreSQL persistence.
+- Lessons and quizzes; tasks, submissions and review; points ledger, badges, challenges, leaderboard, notices; schools/classes and account administration.
+- JPEG, PNG, and WebP evidence uploads up to 5 MB. Local disk storage is the default; Cloudinary signing is available when configured.
+- Demo seed data and a scoring unit test. Production privacy/consent, deployment, and crop-advisor scope are not approved.
 
-## Planned stack and architecture
-React/Vite/JavaScript/JSX, React Router, TanStack Query, Express/Node.js JavaScript ES Modules, REST, JWT, bcrypt, Zod, PostgreSQL, Prisma, Cloudinary, Neon, Render, Vercel, GitHub, GitHub Actions. TypeScript is prohibited; client and server remain separate. React client communicates by HTTPS with Express; API validates/authorizes and accesses PostgreSQL via Prisma; Cloudinary stores approved images. See [Architecture](docs/03-Technical-Architecture.md).
+## Repository layout
 
-## Structure
 ```text
 .
-├── docs/
-│   ├── 01-Project-Overview.md
-│   ├── 02-Requirements-and-Features.md
-│   ├── 03-Technical-Architecture.md
-│   ├── 04-Database-Design.md
-│   ├── 05-API-Documentation.md
-│   ├── 06-UI-UX-Design.md
-│   ├── 07-Development-Roadmap.md
-│   ├── 08-Testing-and-Deployment.md
-│   └── 09-Project-Status.md
-├── PROJECT_RULES.md
-└── README.md
+├── frontend/                 # React/Vite browser application
+├── backend/                  # Express API, runtime config, and API tests
+│   └── scripts/db/            # Database seed runner
+├── database/                 # Prisma schema and migration history
+│   └── prisma/
+├── docs/                     # Project and engineering documentation
+└── package.json              # Root commands for local development
 ```
-At inspection, no application files, manifests, or setup scripts existed. `client/` and `server/` were intentionally not created. Setup commands will be documented when supported by implementation.
 
-## Documentation
+## Run locally
+
+Requirements: Node.js with npm and a reachable PostgreSQL database. Configure `DATABASE_URL` for a **development-only** database. From this directory:
+
+```sh
+cp backend/.env.example backend/.env
+# Set a private JWT_SECRET of at least 32 characters and the local DATABASE_URL.
+npm run setup
+npm run dev:api
+```
+
+In another terminal, run `npm run dev:web`. Vite proxies `/api` to `http://127.0.0.1:4000`. `npm run setup` installs both app packages and creates a Prisma development migration in `database/prisma/migrations` before seeding demo records. Review and commit that migration before sharing or deploying. The optional `npm run db:start` script is specific to a local PostgreSQL 18 installation on macOS and is not required when PostgreSQL is already running.
+
+The development seed creates `admin@ecoquest.test`, `teacher@ecoquest.test`, `student@ecoquest.test`, and `student2@ecoquest.test`, all with password `EcoQuest123!`. These credentials are for local development only; do not expose a seeded instance publicly.
+
+Use `npm run build:web` to create the client production build. `npm test` runs the backend Node test suite. `npm run db:migrate` applies/creates development migrations; `npm run db:seed` loads the synthetic demo records.
+
+## Project documentation
+
 - [Overview](docs/01-Project-Overview.md) · [Requirements](docs/02-Requirements-and-Features.md) · [Architecture](docs/03-Technical-Architecture.md)
 - [Database](docs/04-Database-Design.md) · [API](docs/05-API-Documentation.md) · [UI/UX](docs/06-UI-UX-Design.md)
 - [Roadmap](docs/07-Development-Roadmap.md) · [Testing and deployment](docs/08-Testing-and-Deployment.md) · [Status](docs/09-Project-Status.md)
 - [Project rules](PROJECT_RULES.md)
 
-## Status and future plans
-**Documentation baseline created; application implementation NOT STARTED.** Title/problem statement needs confirmation. No frontend, backend, database, API, auth, tests, or deployment configuration existed at inspection. Confirm identity, review/approve docs, then follow the roadmap. See [Project Status](docs/09-Project-Status.md).
+## Known limits
+
+The current UI uses the first available class for teacher roster display, and admin/teacher list screens use the first API page. There is no checked-in Prisma migration, CI workflow, production deployment config, password recovery, or student privacy/consent workflow. Read [Project Status](docs/09-Project-Status.md) before treating this MVP as release-ready.
