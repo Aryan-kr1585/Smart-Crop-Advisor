@@ -180,11 +180,11 @@ export function AdminHome({ section }) {
               description: form.get('description'),
               startsAt: new Date(form.get('startsAt')).toISOString(),
               endsAt: new Date(form.get('endsAt')).toISOString(),
-              status: 'ACTIVE',
+              status: form.get('status'),
               taskIds,
             },
           });
-          setMessage('Challenge created.');
+          setMessage(form.get('status') === 'DRAFT' ? 'Challenge saved as a draft.' : 'Challenge activated.');
           setError(null);
           queryClient.invalidateQueries({ queryKey: ['challenges', 'admin'] });
         } catch (err) { setError(err); }
@@ -194,6 +194,12 @@ export function AdminHome({ section }) {
         <Field label="Description"><textarea name="description" required minLength={4} /></Field>
         <Field label="Starts"><input name="startsAt" type="datetime-local" required /></Field>
         <Field label="Ends"><input name="endsAt" type="datetime-local" required /></Field>
+        <Field label="Initial status">
+          <select name="status" defaultValue="DRAFT">
+            <option value="DRAFT">Draft</option>
+            <option value="ACTIVE">Active</option>
+          </select>
+        </Field>
         <fieldset>
           <legend>Tasks</legend>
           {tasks.data?.pages.flatMap((page) => page.items).map((task) => (

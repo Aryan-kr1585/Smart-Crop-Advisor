@@ -24,6 +24,8 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - Dashboard lesson, actionable-task, and pending-review counts use server totals rather than the first page preview.
 - Admins can edit or deactivate badges; award criteria become immutable after the first grant.
 - Teachers can save new lessons and tasks as drafts or publish them immediately.
+- Admins can create challenges as drafts or activate them immediately.
+- Teachers can inspect point totals and paginated point histories for students in assigned classes.
 
 ## Phase 5 – Integrated journeys
 - **Status: IMPLEMENTED IN CODE; NOT VERIFIED END TO END.** Client calls the API for registration/login, learning, quiz attempts, submissions/evidence, review, awards, and notices.

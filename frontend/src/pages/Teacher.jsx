@@ -40,6 +40,7 @@ function ClassRoster() {
   });
   const classItems = classes.data?.pages.flatMap((page) => page.items) ?? [];
   const [selectedClassId, setSelectedClassId] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState('');
   const classId = classItems.some((item) => item.id === selectedClassId)
     ? selectedClassId
     : classItems[0]?.id ?? '';
@@ -56,7 +57,10 @@ function ClassRoster() {
       <h2>Class roster</h2>
       {classItems.length > 0 && (
         <Field label="Choose a class">
-          <select value={classId} onChange={(event) => setSelectedClassId(event.target.value)}>
+          <select value={classId} onChange={(event) => {
+            setSelectedClassId(event.target.value);
+            setSelectedStudentId('');
+          }}>
             {classItems.map((item) => (
               <option key={item.id} value={item.id}>{item.name}{item.academicYear ? ` · ${item.academicYear}` : ''}</option>
             ))}
@@ -73,14 +77,59 @@ function ClassRoster() {
         <QueryState query={students}>
           {() => (
             <>
-              <ul>{studentItems.map((student) => <li key={student.id}>{student.displayName}</li>)}</ul>
+              <ul className="list">
+                {studentItems.map((student) => (
+                  <li key={student.id} className="card spread">
+                    <span>{student.displayName}</span>
+                    <button type="button" className="secondary" onClick={() => setSelectedStudentId((current) => current === student.id ? '' : student.id)}>
+                      {selectedStudentId === student.id ? 'Hide progress' : 'View progress'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
               {studentItems.length === 0 && <p className="muted">No students in this class yet.</p>}
               <LoadMore query={students} label="students" />
+              {selectedStudentId && studentItems.some((student) => student.id === selectedStudentId) && (
+                <StudentProgress key={selectedStudentId} studentId={selectedStudentId} />
+              )}
             </>
           )}
         </QueryState>
       )}
     </section>
+  );
+}
+
+function StudentProgress({ studentId }) {
+  const points = useInfiniteQuery({
+    queryKey: ['student-progress', studentId],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/users/${studentId}/points`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+  return (
+    <QueryState query={points}>
+      {() => {
+        const summary = points.data.pages[0];
+        const entries = points.data.pages.flatMap((page) => page.entries);
+        return (
+          <section className="card stack" aria-label={`${summary.displayName} progress`}>
+            <h3>{summary.displayName} progress</h3>
+            <div className="row wrap">
+              <span className="pill">{summary.total} eco-points</span>
+              <span className="pill">{summary.level.name}</span>
+            </div>
+            <h4>Recent point activity</h4>
+            {entries.length === 0 ? <p className="muted">No point activity yet.</p> : (
+              <ul>{entries.map((entry) => (
+                <li key={entry.id}>{entry.amount > 0 ? '+' : ''}{entry.amount} · {entry.reason} · {new Date(entry.createdAt).toLocaleDateString()}</li>
+              ))}</ul>
+            )}
+            <LoadMore query={points} label="point entries" />
+          </section>
+        );
+      }}
+    </QueryState>
   );
 }
 
@@ -222,6 +271,7 @@ export function ReviewPage() {
     onSuccess: () => {
       setError(null);
       queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      queryClient.invalidateQueries({ queryKey: ['student-progress'] });
     },
     onError: setError,
   });
