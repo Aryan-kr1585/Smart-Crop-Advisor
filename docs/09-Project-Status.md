@@ -39,6 +39,7 @@
 - Added server-side totals for lesson catalogs, actionable student tasks, and scoped pending reviews so dashboard summary counts cover every page.
 - Added an admin class edit endpoint and inline controls for class names and academic years, with uniqueness handling and audit records.
 - Added paginated class rosters, idempotent member-add feedback, and audited admin member removal using inactive membership history.
+- Added an admin badge manager for name/description updates, activation control, and pre-award criteria edits; criteria changes are locked once awards exist and updates are audited.
 
 ## Remaining work
 

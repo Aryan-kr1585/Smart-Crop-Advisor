@@ -6,6 +6,7 @@ import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 import { EditableLesson, EditableTask } from '../components/ContentEditors.jsx';
 import { QuizManager } from '../components/QuizManager.jsx';
 import { ChallengeManager } from '../components/ChallengeManager.jsx';
+import { BadgeManager } from '../components/BadgeManager.jsx';
 
 export function AdminHome({ section }) {
   const schools = useInfiniteQuery({
@@ -150,6 +151,7 @@ export function AdminHome({ section }) {
           setMessage('Badge created.');
           setError(null);
           event.target.reset();
+          queryClient.invalidateQueries({ queryKey: ['badges'] });
         } catch (err) { setError(err); }
       }}>
         <h2>New badge</h2>
@@ -165,6 +167,7 @@ export function AdminHome({ section }) {
         <Field label="Threshold"><input name="threshold" type="number" min="1" defaultValue="1" required /></Field>
         <button type="submit">Create badge</button>
       </form>
+      <BadgeManager />
       <form className="card stack" onSubmit={async (event) => {
         event.preventDefault();
         const form = new FormData(event.currentTarget);

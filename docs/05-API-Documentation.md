@@ -49,6 +49,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Badges | GET `/badges` | Browse definitions; auth | → `{items:[]}` | 401 |
 | Badges | GET `/users/me/badges` | Own awards; student | → `{items:[]}` | 401 |
 | Badges | POST `/badges` | Create; admin | `{name,description,criteria}` → badge | 401,403,409,422 |
+| Badges | PATCH `/badges/:badgeId` | Edit/deactivate; admin; criteria locked after first award | partial `{name,description,criteria,active}` → badge | 401,403,404,409,422 |
 | Challenges | GET `/challenges` | Browse active (students) or manage all (staff); auth | `?cursor&limit` → `{items:[{id,title,status,startsAt,endsAt,tasks}],nextCursor}` | 401,422 |
 | Challenges | POST `/challenges` | Create; teacher/admin | `{title,description,startsAt,endsAt,status,schoolId,taskIds}` → challenge | 401,403,404,422 |
 | Challenges | PATCH `/challenges/:challengeId` | Edit lifecycle and content; admin | partial fields, optional task replacement → challenge | 401,403,404,422 |

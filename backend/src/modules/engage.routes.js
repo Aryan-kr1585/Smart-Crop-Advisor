@@ -22,16 +22,59 @@ badgesRouter.use(requireAuth);
 
 badgesRouter.get('/', async (req, res, next) => {
   try {
-    const badges = await prisma.badge.findMany({ where: { active: true }, orderBy: { name: 'asc' } });
+    const adminView = req.user.role === 'ADMIN';
+    const badges = await prisma.badge.findMany({
+      where: adminView ? {} : { active: true },
+      orderBy: { name: 'asc' },
+      ...(adminView ? { include: { _count: { select: { awards: true } } } } : {}),
+    });
     res.json({
       items: badges.map((badge) => ({
         id: badge.id,
         name: badge.name,
         description: badge.description,
         criteria: badge.criteria,
+        ...(adminView ? { active: badge.active, awardsCount: badge._count.awards, canEditCriteria: badge._count.awards === 0 } : {}),
       })),
     });
   } catch (error) {
+    next(error);
+  }
+});
+
+badgesRouter.patch('/:badgeId', requireRoles('ADMIN'), validate({
+  params: z.object({ badgeId: z.string().uuid() }),
+  body: z.object({
+    name: z.string().trim().min(2).max(80).optional(),
+    description: z.string().trim().min(4).max(300).optional(),
+    criteria: criteria.optional(),
+    active: z.boolean().optional(),
+  }).refine((body) => Object.keys(body).length > 0, { message: 'No changes provided' }),
+}), async (req, res, next) => {
+  try {
+    const badge = await prisma.$transaction(async (tx) => {
+      const existing = await tx.badge.findUnique({ where: { id: req.params.badgeId } });
+      if (!existing) throw notFound();
+      if (req.body.criteria) {
+        const awards = await tx.userBadge.count({ where: { badgeId: existing.id } });
+        if (awards > 0) throw conflict('Badge criteria are locked after the first award');
+      }
+      const updated = await tx.badge.update({ where: { id: existing.id }, data: req.body });
+      await writeAudit(tx, {
+        actorId: req.user.id,
+        action: 'BADGE_UPDATE',
+        entityType: 'Badge',
+        entityId: updated.id,
+        metadata: { changedFields: Object.keys(req.body) },
+      });
+      return updated;
+    });
+    res.json({ id: badge.id, name: badge.name, description: badge.description, criteria: badge.criteria, active: badge.active });
+  } catch (error) {
+    if (error.code === 'P2002') {
+      next(conflict('A badge with this name already exists'));
+      return;
+    }
     next(error);
   }
 });
