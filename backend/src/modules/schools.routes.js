@@ -200,7 +200,10 @@ schoolsRouter.patch('/classes/:classId', requireRoles('ADMIN'), validate({
 
 schoolsRouter.post('/classes/:classId/members', requireRoles('ADMIN', 'TEACHER'), validate({
   params: z.object({ classId: z.string().uuid() }),
-  body: z.object({ userIds: z.array(z.string().uuid()).min(1).max(50) }),
+  body: z.object({ userIds: z.array(z.string().uuid()).min(1).max(50) }).refine(
+    (body) => new Set(body.userIds).size === body.userIds.length,
+    { path: ['userIds'], message: 'A person can only be listed once' },
+  ),
 }), async (req, res, next) => {
   try {
     const cls = await prisma.class.findUnique({ where: { id: req.params.classId } });
@@ -228,8 +231,15 @@ schoolsRouter.post('/classes/:classId/members', requireRoles('ADMIN', 'TEACHER')
         return;
       }
     }
-    await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      const existingMemberships = await tx.classMembership.findMany({
+        where: { classId: cls.id, userId: { in: users.map((user) => user.id) } },
+      });
+      const membershipByUser = new Map(existingMemberships.map((membership) => [membership.userId, membership]));
+      const alreadyMembers = users.filter((user) => membershipByUser.get(user.id)?.status === 'ACTIVE').length;
+      const toAdd = users.filter((user) => membershipByUser.get(user.id)?.status !== 'ACTIVE');
       for (const user of users) {
+        if (membershipByUser.get(user.id)?.status === 'ACTIVE') continue;
         if (!user.schoolId) {
           await tx.user.update({ where: { id: user.id }, data: { schoolId: cls.schoolId } });
         }
@@ -239,15 +249,45 @@ schoolsRouter.post('/classes/:classId/members', requireRoles('ADMIN', 'TEACHER')
           create: { userId: user.id, classId: cls.id },
         });
       }
+      if (toAdd.length) {
+        await writeAudit(tx, {
+          actorId: req.user.id,
+          action: 'CLASS_MEMBERS_ADD',
+          entityType: 'Class',
+          entityId: cls.id,
+          metadata: { userIds: toAdd.map((user) => user.id) },
+        });
+      }
+      return { added: toAdd.length, alreadyMembers };
+    });
+    res.json(result);
+  } catch (error) {
+    next(error);
+  }
+});
+
+schoolsRouter.delete('/classes/:classId/members/:userId', requireRoles('ADMIN'), validate({
+  params: z.object({ classId: z.string().uuid(), userId: z.string().uuid() }),
+}), async (req, res, next) => {
+  try {
+    await prisma.$transaction(async (tx) => {
+      const membership = await tx.classMembership.findUnique({
+        where: { userId_classId: { userId: req.params.userId, classId: req.params.classId } },
+      });
+      if (!membership || membership.status !== 'ACTIVE') throw notFound('Active class membership not found');
+      await tx.classMembership.update({
+        where: { userId_classId: { userId: req.params.userId, classId: req.params.classId } },
+        data: { status: 'INACTIVE' },
+      });
       await writeAudit(tx, {
         actorId: req.user.id,
-        action: 'CLASS_MEMBERS_ADD',
+        action: 'CLASS_MEMBER_REMOVE',
         entityType: 'Class',
-        entityId: cls.id,
-        metadata: { userIds: req.body.userIds },
+        entityId: req.params.classId,
+        metadata: { userId: req.params.userId },
       });
     });
-    res.json({ added: users.length });
+    res.json({ removed: true });
   } catch (error) {
     next(error);
   }

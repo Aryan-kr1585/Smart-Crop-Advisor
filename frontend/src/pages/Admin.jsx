@@ -286,6 +286,16 @@ function SchoolClasses({ school, onError, onDone }) {
 
 function SchoolClass({ item, people, onError, onDone }) {
   const [editing, setEditing] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
+  const [removingUserId, setRemovingUserId] = useState('');
+  const queryClient = useQueryClient();
+  const members = useInfiniteQuery({
+    queryKey: ['class-members', item.id],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/users?classId=${encodeURIComponent(item.id)}`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: showMembers,
+  });
   return (
     <article className="card stack">
       <div className="spread">
@@ -316,10 +326,15 @@ function SchoolClass({ item, people, onError, onDone }) {
       </form>}
       <form className="stack" onSubmit={async (event) => {
         event.preventDefault();
-        const userId = new FormData(event.currentTarget).get('userId');
+        const formElement = event.currentTarget;
+        const userId = new FormData(formElement).get('userId');
         try {
-          await api(`/classes/${item.id}/members`, { method: 'POST', body: { userIds: [userId] } });
-          onDone(`Added to ${item.name}.`);
+          const result = await api(`/classes/${item.id}/members`, { method: 'POST', body: { userIds: [userId] } });
+          await queryClient.invalidateQueries({ queryKey: ['class-members', item.id] });
+          onDone(result.added
+            ? `Added ${result.added} person to ${item.name}.${result.alreadyMembers ? ` ${result.alreadyMembers} were already members.` : ''}`
+            : `That person is already a member of ${item.name}.`);
+          formElement.reset();
         } catch (err) { onError(err); }
       }}>
         <Field label="Add an existing account">
@@ -332,6 +347,39 @@ function SchoolClass({ item, people, onError, onDone }) {
         </Field>
         <button type="submit" className="secondary">Add to class</button>
       </form>
+      <div className="stack">
+        <button type="button" className="secondary" onClick={() => setShowMembers((value) => !value)}>
+          {showMembers ? 'Hide members' : 'Manage members'}
+        </button>
+        {showMembers && <>
+        <h4>Class members</h4>
+        <QueryState query={members}>
+          {() => {
+            const enrolled = members.data.pages.flatMap((page) => page.items);
+            return enrolled.length === 0 ? <p className="muted">No active members.</p> : (
+              <ul className="list">
+                {enrolled.map((person) => (
+                  <li key={person.id} className="row wrap spread">
+                    <span>{person.displayName} · {person.role.toLowerCase()}</span>
+                    <button type="button" className="secondary" disabled={removingUserId === person.id} onClick={async () => {
+                      if (!window.confirm(`Remove ${person.displayName} from ${item.name}?`)) return;
+                      setRemovingUserId(person.id);
+                      try {
+                        await api(`/classes/${item.id}/members/${person.id}`, { method: 'DELETE' });
+                        await queryClient.invalidateQueries({ queryKey: ['class-members', item.id] });
+                        onDone(`Removed ${person.displayName} from ${item.name}.`);
+                      } catch (err) { onError(err); }
+                      finally { setRemovingUserId(''); }
+                    }}>{removingUserId === person.id ? 'Removing…' : 'Remove'}</button>
+                  </li>
+                ))}
+              </ul>
+            );
+          }}
+        </QueryState>
+        <LoadMore query={members} label="class members" />
+        </>}
+      </div>
     </article>
   );
 }

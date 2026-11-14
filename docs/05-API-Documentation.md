@@ -25,7 +25,8 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Classes | GET `/schools/:schoolId/classes` | List; admin/assigned teacher | pagination → `{items,nextCursor}` | 401,403,404 |
 | Classes | POST `/schools/:schoolId/classes` | Create; admin | `{name,academicYear}` → class | 401,403,409,422 |
 | Classes | PATCH `/classes/:classId` | Edit name/year; admin | `{name?,academicYear?}` → class | 401,403,404,409,422 |
-| Classes | POST `/classes/:classId/members` | Assign students; admin/scoped teacher | `{userIds:[]}` → `{added}` | 401,403,404,422 |
+| Classes | POST `/classes/:classId/members` | Assign members; admin/scoped teacher | `{userIds:[]}` → `{added,alreadyMembers}` | 401,403,404,409,422 |
+| Classes | DELETE `/classes/:classId/members/:userId` | Remove active member; admin | → `{removed:true}`; membership retained as inactive | 401,403,404 |
 | Lessons | GET `/lessons` | Browse available lessons; authenticated | pagination → `{items:[{id,title,status,authorId,canEdit}],nextCursor,totalCount}` | 401,422 |
 | Lessons | GET `/lessons/:lessonId` | Read; authenticated | → `{id,title,body}` | 401,404 |
 | Lessons | POST `/lessons` | Create; teacher/admin | `{title,body,status}` → lesson | 401,403,422 |
