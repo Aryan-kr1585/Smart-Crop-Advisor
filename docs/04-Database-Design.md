@@ -30,6 +30,7 @@ IDs are PostgreSQL UUIDs; mutable records generally have `createdAt`/`updatedAt`
 | Table | Purpose and columns | Keys, relationships, constraints, indexes |
 |---|---|---|
 | User | Identity: `id,email,passwordHash,displayName,role,status,schoolId?` | PK id; FK School; unique normalized email; index `(schoolId,role,status)`; never plaintext password |
+| PasswordResetToken | Recovery: `tokenHash,userId,expiresAt,usedAt,createdAt` | Unique token hash; FK User with cascade; index `(userId,expiresAt)`; raw token is never persisted |
 | School | Tenant: `id,name,region?,status` | PK; decide unique code/name; index status/region |
 | Class | Group: `id,schoolId,name,academicYear?` | PK; FK School; unique `(schoolId,name,academicYear)`; index schoolId |
 | ClassMembership | User/class join: `userId,classId,joinedAt,status` | Composite PK; FKs; indexes both FKs; enforce school consistency |

@@ -49,4 +49,4 @@ Use `npm run build:web` to create the client production build. `npm test` runs t
 
 ## Known limits
 
-Some dashboard summary counts show the first page as a lower-bound preview. There is no CI workflow, production deployment config, password recovery, or student privacy/consent workflow. Read [Project Status](docs/09-Project-Status.md) before treating this MVP as release-ready.
+Password recovery uses one-time links. Local development returns the link on the request screen; production requires a Resend API key and verified sender configured as `RESEND_API_KEY` and `MAIL_FROM` in `backend/.env`. Some dashboard summary counts show the first page as a lower-bound preview. There is no CI workflow, production deployment config, or student privacy/consent workflow. Read [Project Status](docs/09-Project-Status.md) before treating this MVP as release-ready.

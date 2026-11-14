@@ -14,7 +14,7 @@ Authorization must be checked server-side on every scoped operation. Hiding a cl
 ## Feature requirements
 | ID / feature | Role and workflow / expected behaviour | Validation and acceptance criteria | Dependencies | Status |
 |---|---|---|---|---|
-| F-01 Accounts | All roles register/login/logout and access appropriate pages | Validate email/password; unique account; role cannot be self-elevated; invalid credentials disclose no secrets | Users, JWT, bcrypt | PARTIAL — API and student UI; recovery absent |
+| F-01 Accounts | All roles register/login/logout and access appropriate pages | Validate email/password; unique account; role cannot be self-elevated; invalid credentials disclose no secrets; reset token is single-use, expires, and revokes sessions | Users, JWT, bcrypt, reset token, email | PARTIAL — registration/login and expiring password recovery implemented; production email configuration and verification pending |
 | F-02 Profile | All roles view/edit permitted profile fields | Validate formats/length; school/role changes privileged; persisted updates visible | Users, RBAC | PARTIAL — self display name and admin edits |
 | F-03 Schools/classes | Admin creates groups and assigns membership; teachers view authorized students | Prevent duplicate membership; cross-school access denied | Schools, Classes | PARTIAL — create/assign/list; editing and full class UI absent |
 | F-04 Lessons | Student browses published lessons; teacher/admin drafts, edits, publishes | Required title/body; students see published content only; authorized editor succeeds | Lessons, API/UI | PARTIAL — list/read/create/edit API and teacher/admin edit UI; draft workflow is limited |

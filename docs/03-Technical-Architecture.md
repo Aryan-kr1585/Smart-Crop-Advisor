@@ -48,7 +48,7 @@ sequenceDiagram
 ```
 
 ## Authentication, uploads, deployment
-Use bcrypt; never store/log plaintext passwords. JWT secrets belong in environment-managed secret stores; define expiry, issuer/audience checks, refresh/revocation, and cookie versus bearer strategy before coding. Verify ownership and school/class scope server-side. The API alone accesses PostgreSQL. Store Cloudinary IDs and safe metadata, not binaries, in PostgreSQL; constrain file size/type and use signed or server-mediated uploads. Define evidence retention/deletion.
+Use bcrypt; never store/log plaintext passwords. Password recovery stores only SHA-256 hashes of random, single-use tokens with a 30-minute expiry; completion revokes prior JWTs. Development returns a local reset link; production sends through Resend and requires `RESEND_API_KEY` and `MAIL_FROM`. JWT secrets belong in environment-managed secret stores; define expiry, issuer/audience checks, refresh/revocation, and cookie versus bearer strategy before coding. Verify ownership and school/class scope server-side. The API alone accesses PostgreSQL. Store Cloudinary IDs and safe metadata, not binaries, in PostgreSQL; constrain file size/type and use signed or server-mediated uploads. Define evidence retention/deletion.
 
 Vercel serves client; Render runs API; Neon hosts PostgreSQL; Cloudinary stores evidence. Separate environment credentials, CORS allowlists, HTTPS, health checks, backups, and reviewed migrations. GitHub Actions should run approved build/checks and deploy by environment policy.
 

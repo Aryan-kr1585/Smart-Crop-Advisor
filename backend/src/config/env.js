@@ -13,6 +13,12 @@ const schema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional().default(''),
   CLOUDINARY_API_KEY: z.string().optional().default(''),
   CLOUDINARY_API_SECRET: z.string().optional().default(''),
+  RESEND_API_KEY: z.string().optional().default(''),
+  MAIL_FROM: z.union([z.literal(''), z.string().min(3)]).default(''),
+}).superRefine((value, ctx) => {
+  if (value.NODE_ENV === 'production' && (!value.RESEND_API_KEY || !value.MAIL_FROM)) {
+    ctx.addIssue({ code: 'custom', path: ['RESEND_API_KEY'], message: 'Password recovery email requires RESEND_API_KEY and MAIL_FROM in production' });
+  }
 });
 
 const parsed = schema.safeParse(process.env);

@@ -12,6 +12,8 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Auth | POST `/auth/register` | Create account; public/policy pending | `{email,password,displayName}` → `{user:{id,email,role}}` | 400,409,422,429 |
 | Auth | POST `/auth/login` | Authenticate; public | `{email,password}` → `{accessToken,expiresIn,user}` | 400,401,429 |
 | Auth | POST `/auth/logout` | End session; authenticated | `{}` → `{success:true}` | 401 |
+| Auth | POST `/auth/password-reset-requests` | Request recovery; public, generic response | `{email}` → `{success:true,message}`; dev also returns a local link | 422,429 |
+| Auth | POST `/auth/password-resets` | Set password with one-time token; public | `{token,password}` → `{success:true,message}` | 400,422,429 |
 | Users | GET `/users/me` | Current profile; any auth | → `{id,displayName,role,schoolId}` | 401 |
 | Users | PATCH `/users/me` | Edit permitted fields; any auth | `{displayName}` → profile | 401,422 |
 | Users | GET `/users` | Search/manage; admin or scoped teacher | `?schoolId&classId&cursor&limit` → `{items,nextCursor}` | 401,403,422 |
@@ -50,4 +52,4 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Notifications | GET `/notifications` | Own notices; auth | `?unread&cursor&limit` → `{items,nextCursor}` | 401,422 |
 | Notifications | PATCH `/notifications/:id/read` | Mark own read; auth | `{}` → `{id,readAt}` | 401,404 |
 
-Do not expose password hashes, answer keys before submission, private student data, provider secrets, or another user's records. Quiz edits are rejected after the first attempt to preserve recorded score meaning. Use idempotency for awards/reviews. Update this contract when API changes.
+Do not expose password hashes, reset-token hashes, answer keys before submission, private student data, provider secrets, or another user's records. Password reset tokens expire after 30 minutes, work once, and invalidate prior sessions; only development responses include the raw local reset link. Quiz edits are rejected after the first attempt to preserve recorded score meaning. Use idempotency for awards/reviews. Update this contract when API changes.

@@ -73,12 +73,104 @@ export function Login() {
         <Field label="Email"><input name="email" type="email" autoComplete="username" required /></Field>
         <Field label="Password"><input name="password" type="password" autoComplete="current-password" required minLength={8} /></Field>
         <button type="submit" disabled={pending}>{pending ? 'Checking…' : 'Log in'}</button>
+        <p><Link to="/forgot-password">Forgot your password?</Link></p>
         <p>New student? <Link to="/register">Create an account</Link></p>
         {import.meta.env.DEV && (
           <p className="muted">
             Development accounts use the password EcoQuest123! — admin@ecoquest.test, teacher@ecoquest.test, student@ecoquest.test.
           </p>
         )}
+      </form>
+    </div>
+  );
+}
+
+export function ForgotPassword() {
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+  const [developmentResetUrl, setDevelopmentResetUrl] = useState('');
+  const [pending, setPending] = useState(false);
+
+  async function onSubmit(event) {
+    event.preventDefault();
+    setError(null);
+    setMessage('');
+    setDevelopmentResetUrl('');
+    setPending(true);
+    try {
+      const form = new FormData(event.currentTarget);
+      const result = await api('/auth/password-reset-requests', {
+        method: 'POST', body: { email: form.get('email') },
+      });
+      setMessage(result.message);
+      setDevelopmentResetUrl(result.developmentResetUrl ?? '');
+    } catch (err) {
+      setError(err);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="public">
+      <p className="brand"><Link to="/">EcoQuest</Link></p>
+      <form className="panel stack" onSubmit={onSubmit} style={{ maxWidth: 460 }}>
+        <h1>Reset your password</h1>
+        <p className="muted">Enter your account email. If it matches an active account, we’ll send a reset link.</p>
+        <ErrorList error={error} />
+        {message && <p className="banner" role="status">{message}</p>}
+        {developmentResetUrl && <p><a href={developmentResetUrl}>Open local development reset link</a></p>}
+        <Field label="Email"><input name="email" type="email" autoComplete="username" required /></Field>
+        <button type="submit" disabled={pending}>{pending ? 'Requesting…' : 'Send reset link'}</button>
+        <p><Link to="/login">Back to log in</Link></p>
+      </form>
+    </div>
+  );
+}
+
+export function ResetPassword() {
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+  const [pending, setPending] = useState(false);
+  const token = new URLSearchParams(window.location.search).get('token') ?? '';
+
+  async function onSubmit(event) {
+    event.preventDefault();
+    setError(null);
+    setMessage('');
+    setPending(true);
+    const form = new FormData(event.currentTarget);
+    const formElement = event.currentTarget;
+    if (form.get('password') !== form.get('confirmPassword')) {
+      setError(new Error('The passwords do not match.'));
+      setPending(false);
+      return;
+    }
+    try {
+      const result = await api('/auth/password-resets', {
+        method: 'POST', body: { token, password: form.get('password') },
+      });
+      setMessage(result.message);
+      formElement.reset();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="public">
+      <p className="brand"><Link to="/">EcoQuest</Link></p>
+      <form className="panel stack" onSubmit={onSubmit} style={{ maxWidth: 460 }}>
+        <h1>Choose a new password</h1>
+        <ErrorList error={error} />
+        {message && <p className="banner" role="status">{message} <Link to="/login">Log in</Link></p>}
+        {!token && <p className="banner error" role="alert">This reset link is missing its token. Request a new link.</p>}
+        <Field label="New password"><input name="password" type="password" autoComplete="new-password" required minLength={8} maxLength={72} /></Field>
+        <Field label="Confirm password"><input name="confirmPassword" type="password" autoComplete="new-password" required minLength={8} maxLength={72} /></Field>
+        <button type="submit" disabled={pending || !token}>{pending ? 'Saving…' : 'Set new password'}</button>
+        <p><Link to="/forgot-password">Request another reset link</Link></p>
       </form>
     </div>
   );

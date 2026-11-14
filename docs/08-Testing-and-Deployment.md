@@ -8,7 +8,7 @@ The API includes a Node.js test for scoring. Prisma schema validation, migration
 | Unit | Domain rules, Zod schemas, scoring, badge criteria, date boundaries |
 | API | Contracts, status/errors, validation, pagination, rate limits |
 | Integration | Express + Prisma + disposable PostgreSQL, migrations and transactions |
-| Authentication | Registration, bcrypt, invalid/expired token, logout/revocation policy |
+| Authentication | Registration, bcrypt, invalid/expired JWT and password-reset tokens, single-use reset, generic reset responses, session revocation, logout policy |
 | Authorization | Roles, school/class scope, ownership, admin-only routes, direct API access |
 | Points | Server-side awards, approval outcomes, ledger totals, reversals |
 | Duplicate prevention | Retry/replay; one award per event/idempotency key |
@@ -36,6 +36,7 @@ Proposed environment names: `DATABASE_URL`, `JWT_SECRET` (or key pair), `CLIENT_
 ## Production checklist
 - [ ] Scope, privacy/consent, terms, and content policy approved.
 - [ ] Secrets configured without printing values; HTTPS/CORS/token policy/rate limits checked.
+- [ ] Resend API key and verified sender configured; reset emails and generic responses verified without logging tokens.
 - [ ] Migration reviewed; backup and restore tested.
 - [ ] Secure admin bootstrap; demo accounts removed/disabled.
 - [ ] Upload authorization, limits, and retention verified.

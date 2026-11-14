@@ -11,7 +11,7 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - `npm run setup` invokes Prisma using `database/prisma/schema.prisma` and then the backend seed runner. The migration was generated, applied, and seeded against a disposable PostgreSQL 18 database. Privacy/retention policy remains open.
 
 ## Phase 2 – API foundation and authentication
-- **Status: IMPLEMENTED; VERIFICATION PENDING.** Express app, validated env, Prisma client, safe errors, JWT auth/revocation, bcrypt, RBAC, rate limits, Helmet, CORS, and health endpoint are present.
+- **Status: IMPLEMENTED; VERIFICATION PENDING.** Express app, validated env, Prisma client, safe errors, JWT auth/revocation, bcrypt, RBAC, rate limits, Helmet, CORS, health endpoint, and single-use password recovery are present. Production recovery requires Resend configuration.
 - Add automated API/auth/scope coverage and define a production token/storage policy.
 
 ## Phase 3 – Core API workflows

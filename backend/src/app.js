@@ -37,6 +37,8 @@ export function createApp() {
   });
   app.use('/api/v1/auth/login', authLimiter);
   app.use('/api/v1/auth/register', authLimiter);
+  app.use('/api/v1/auth/password-reset-requests', authLimiter);
+  app.use('/api/v1/auth/password-resets', authLimiter);
   app.use('/api/v1', api);
   app.use(notFoundHandler);
   app.use(errorHandler);

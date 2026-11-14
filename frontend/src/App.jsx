@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './lib/auth.jsx';
 import { homeFor } from './lib/api.js';
-import { Home, Login, Register } from './pages/Public.jsx';
+import { ForgotPassword, Home, Login, Register, ResetPassword } from './pages/Public.jsx';
 import { Shell } from './components/Shell.jsx';
 import {
   LeaderboardPage,
@@ -58,6 +58,8 @@ export default function App() {
       <Route path="/" element={<Home />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route element={<RequireAuth roles={['STUDENT']} />}>
         <Route path="/learn" element={<StudentHome />} />
         <Route path="/learn/lessons" element={<LessonList />} />

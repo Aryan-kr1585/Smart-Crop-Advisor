@@ -21,7 +21,7 @@ flowchart TD
 
 ## Screens and behaviour
 - **Public home/about:** approved purpose and entry points; no unsupported impact claims.
-- **Authentication:** labeled forms, useful validation, password visibility, recovery path once defined; registration role follows policy.
+- **Authentication:** labeled forms, useful validation, password visibility, recovery request and reset forms; registration role follows policy. Recovery gives the same confirmation for known and unknown emails.
 - **Student dashboard:** next learning/action, due tasks, recent progress, points/achievements. Cursor-backed lessons, tasks, points history, notices, challenges, and leaderboard entries use a load-more control where the full list is available.
 - **Lesson:** readable published content, progress, related quiz.
 - **Quiz:** clear progress, keyboard controls, confirmation, result and explanation.
