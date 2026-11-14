@@ -3,6 +3,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
 import { LoadMore, pageUrl } from '../components/Pagination.jsx';
+import { EditableLesson, EditableTask } from '../components/ContentEditors.jsx';
 
 export function AdminHome({ section }) {
   const schools = useInfiniteQuery({
@@ -23,6 +24,13 @@ export function AdminHome({ section }) {
     queryKey: ['tasks'],
     initialPageParam: null,
     queryFn: ({ pageParam }) => api(pageUrl('/tasks', pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    enabled: section === 'content',
+  });
+  const lessons = useInfiniteQuery({
+    queryKey: ['lessons'],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl('/lessons', pageParam)),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: section === 'content',
   });
@@ -122,7 +130,7 @@ export function AdminHome({ section }) {
 
   return (
     <div className="stack">
-      <h1>Badges and challenges</h1>
+      <h1>Content and engagement</h1>
       <ErrorList error={error} />
       {message && <p className="banner" role="status">{message}</p>}
       <form className="card stack" onSubmit={async (event) => {
@@ -192,6 +200,31 @@ export function AdminHome({ section }) {
         <LoadMore query={tasks} label="tasks" />
         <button type="submit">Create challenge</button>
       </form>
+      <section className="stack">
+        <h2>Manage lessons</h2>
+        <QueryState query={lessons}>
+          {() => (
+            <ul className="list">
+              {lessons.data.pages.flatMap((page) => page.items).map((lesson) => (
+                <EditableLesson key={lesson.id} lesson={lesson} />
+              ))}
+            </ul>
+          )}
+        </QueryState>
+        <LoadMore query={lessons} label="lessons" />
+      </section>
+      <section className="stack">
+        <h2>Manage tasks</h2>
+        <QueryState query={tasks}>
+          {() => (
+            <ul className="list">
+              {tasks.data.pages.flatMap((page) => page.items).map((task) => (
+                <EditableTask key={task.id} task={task} />
+              ))}
+            </ul>
+          )}
+        </QueryState>
+      </section>
     </div>
   );
 }

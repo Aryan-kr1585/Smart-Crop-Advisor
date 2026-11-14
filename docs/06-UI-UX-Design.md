@@ -28,8 +28,8 @@ flowchart TD
 - **Task/submission:** criteria, deadline, accepted evidence, upload progress, review status, resubmission rules.
 - **Leaderboard:** explicit scope/period, privacy-preserving names, accessible ranking and non-punitive presentation.
 - **Profile/achievements:** personal history, badge criteria, points ledger, approved privacy controls.
-- **Teacher dashboard:** only assigned classes; roster, content tools, pending reviews, progress summaries. Class selection spans paginated assigned classes; roster and review lists can load subsequent pages. Review shows criteria/evidence, safe preview fallback, decision and feedback.
-- **Admin dashboard:** users, schools/classes, content, challenges/badges, activity; school, class, member-candidate, user, and task lists can load subsequent pages. Privileged actions are clearly scoped; confirm consequential changes and expose audit information.
+- **Teacher dashboard:** only assigned classes; roster, content tools, pending reviews, progress summaries. Class selection spans paginated assigned classes; roster and review lists can load subsequent pages. Teachers can edit lessons and tasks they authored. Review shows criteria/evidence, safe preview fallback, decision and feedback.
+- **Admin dashboard:** users, schools/classes, content, challenges/badges, activity; school, class, member-candidate, user, and task lists can load subsequent pages. Admins can edit lessons and tasks. Privileged actions are clearly scoped; confirm consequential changes and expose audit information.
 
 ## Responsive and shared states
 Mobile-first layout, readable lesson width, touch-sized controls, responsive tables/cards, no horizontal scroll for core tasks. Upload must show requirements, progress, cancel/retry, and success. Loading preserves layout and announces state; errors explain recovery without traces; empty states explain next steps; timeouts never imply success; permission errors do not reveal protected resources; success confirms persisted state.

@@ -61,4 +61,4 @@ database/prisma/{schema.prisma,migrations}
 docs/
 package.json
 ```
-Root npm scripts install and run frontend/backend packages and call Prisma with the schema under `database/`. See [Testing and Deployment](08-Testing-and-Deployment.md).
+Root npm scripts install and run frontend/backend packages and call Prisma with the schema under `database/`. Teachers can edit lessons they authored and tasks they authored; admins can edit either content type. See [Testing and Deployment](08-Testing-and-Deployment.md).

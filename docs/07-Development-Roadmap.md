@@ -1,6 +1,6 @@
 # 7. Development Roadmap
 
-Roadmap state reflects the repository as inspected on 2026-11-14. Statuses describe code artifacts, not stakeholder acceptance or production readiness. The official project identity remains unresolved.
+Roadmap state reflects the repository as inspected on 2026-11-15. Statuses describe code artifacts, not stakeholder acceptance or production readiness. The official project identity remains unresolved.
 
 ## Phase 0 – Scope and setup
 - **Status: IN PROGRESS / NEEDS CONFIRMATION.** The provisional EcoQuest implementation exists, but the repository and supplied title say Smart Crop Advisor. Obtain an authoritative title/problem statement before presenting or deploying.
@@ -16,11 +16,11 @@ Roadmap state reflects the repository as inspected on 2026-11-14. Statuses descr
 
 ## Phase 3 – Core API workflows
 - **Status: MVP IMPLEMENTED; VERIFICATION AND COVERAGE PENDING.** API routes cover schools/classes, lessons, quizzes, tasks/submissions/reviews, progress, badges, challenges, leaderboard, notices, and uploads. Award writes use a ledger and idempotency keys.
-- Known limits include lack of a full edit workflow in the UI, migration history, and release-grade authorization/transaction verification.
+- Lesson and task edit forms now use existing API permission checks. API authorization/transaction behavior still needs release-grade verification.
 
 ## Phase 4 – Role-based client
 - **Status: MVP IMPLEMENTED; POLISH PENDING.** React/Vite has public, student, teacher, and admin routes for learning, activities, progress, content authoring, reviews, and school/account setup. Cursor-backed lists now expose load-more controls, and teachers can select among assigned classes.
-- Quiz authoring currently creates a single-question quiz; admin content management and class editing remain limited.
+- Quiz authoring currently creates a single-question quiz and quiz editing is not implemented; challenge lifecycle management and class editing remain limited.
 
 ## Phase 5 – Integrated journeys
 - **Status: IMPLEMENTED IN CODE; NOT VERIFIED END TO END.** Client calls the API for registration/login, learning, quiz attempts, submissions/evidence, review, awards, and notices.

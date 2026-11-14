@@ -65,6 +65,7 @@ tasksRouter.get('/', validate({ query: page.omit({ status: true }) }), async (re
         startsAt: task.startsAt,
         dueAt: task.dueAt,
         requiresReview: task.requiresReview,
+        canEdit: req.user.role === 'ADMIN' || task.authorId === req.user.id,
         mySubmission: task.submissions?.[0]
           ? { id: task.submissions[0].id, status: task.submissions[0].status }
           : null,

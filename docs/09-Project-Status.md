@@ -1,6 +1,6 @@
 # 9. Project Status
 
-**Inspection date:** 2026-11-14 (Asia/Kolkata)
+**Inspection date:** 2026-11-15 (Asia/Kolkata)
 
 ## Observed repository state
 
@@ -31,13 +31,14 @@
 - Generated the Prisma client, applied the migration, and seeded demo data against a separate disposable PostgreSQL 18 database on port 5544; the existing project database directory was not used.
 - Directed Prisma client generation into the backend package so the external schema does not cause duplicate root dependencies.
 - Added cursor-based load-more controls for student lessons, tasks, challenges, points history, notices, and leaderboard; teacher rosters, reviews, content lists, classes; and admin schools, people, class rosters, and task choices. Teachers can select an assigned class.
+- Added lesson and task edit forms for teachers and admins, with edit controls shown only where the API reports permission. Lesson/task APIs retain server-side author/admin authorization.
 
 ## Remaining work
 
 - Confirm the official title/problem statement and approve age/consent, privacy, evidence retention, moderation, and leaderboard policies.
 - Add broader migration/seed regression coverage and ensure deployment uses the checked-in migration history.
 - Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
-- Add full content editing and recovery/retention workflows; improve summary-card counts where they currently show only an initial page preview.
+- Add quiz editing and multi-question authoring, challenge lifecycle editing, and recovery/retention workflows; improve summary-card counts where they currently show only an initial page preview.
 - Configure and verify CI/deployment, backups, monitoring, and rollback before release.
 - Review the dependency audit findings reported during backend installation (four high severity findings; Multer 1.x is deprecated).
 

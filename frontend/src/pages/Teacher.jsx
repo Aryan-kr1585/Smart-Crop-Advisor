@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
 import { LoadMore, pageUrl } from '../components/Pagination.jsx';
+import { EditableLesson, EditableTask } from '../components/ContentEditors.jsx';
 import { Evidence } from './Student.jsx';
 
 export function TeachHome() {
@@ -184,6 +185,19 @@ export function TeachContent() {
         <Field label="Body"><textarea name="body" required minLength={10} /></Field>
         <button type="submit">Publish lesson</button>
       </form>
+      <section className="stack">
+        <h2>Manage lessons</h2>
+        <QueryState query={lessons}>
+          {() => (
+            <ul className="list">
+              {lessons.data.pages.flatMap((page) => page.items).map((lesson) => (
+                <EditableLesson key={lesson.id} lesson={lesson} />
+              ))}
+            </ul>
+          )}
+        </QueryState>
+        <LoadMore query={lessons} label="lessons" />
+      </section>
       <form className="card stack" onSubmit={createQuiz}>
         <h2>New one-question quiz</h2>
         <Field label="Title"><input name="title" required minLength={3} /></Field>
@@ -193,7 +207,6 @@ export function TeachContent() {
             {lessons.data?.pages.flatMap((page) => page.items).map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
           </select>
         </Field>
-        <LoadMore query={lessons} label="lessons" />
         <Field label="Question"><input name="prompt" required minLength={3} /></Field>
         <Field label="Option 1"><input name="option1" required /></Field>
         <Field label="Option 2"><input name="option2" required /></Field>
@@ -218,7 +231,13 @@ export function TeachContent() {
       <section>
         <h2>Published tasks</h2>
         <QueryState query={tasks}>
-          {() => <ul>{tasks.data.pages.flatMap((page) => page.items).map((task) => <li key={task.id}>{task.title} · {task.points} points</li>)}</ul>}
+          {() => (
+            <ul className="list">
+              {tasks.data.pages.flatMap((page) => page.items).map((task) => (
+                <EditableTask key={task.id} task={task} />
+              ))}
+            </ul>
+          )}
         </QueryState>
         <LoadMore query={tasks} label="tasks" />
       </section>

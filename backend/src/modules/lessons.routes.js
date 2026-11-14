@@ -37,7 +37,10 @@ lessonsRouter.get('/', validate({ query: page }), async (req, res, next) => {
     });
     const result = pageResult(rows, req.query.limit);
     res.json({
-      items: result.items.map(({ createdAt, ...lesson }) => lesson),
+      items: result.items.map(({ createdAt, ...lesson }) => ({
+        ...lesson,
+        canEdit: req.user.role === 'ADMIN' || lesson.authorId === req.user.id,
+      })),
       nextCursor: result.nextCursor,
     });
   } catch (error) {
