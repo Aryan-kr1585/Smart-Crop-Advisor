@@ -360,19 +360,21 @@ submissionsRouter.post('/:id/review', requireRoles('TEACHER', 'ADMIN'), validate
         awardedPoints = entry ? existing.task.points : 0;
         await evaluateBadges(tx, existing.userId);
       }
-      await tx.notification.create({
-        data: {
-          userId: existing.userId,
-          type: 'SUBMISSION_REVIEWED',
-          payload: {
-            submissionId: existing.id,
-            taskTitle: existing.task.title,
-            decision: req.body.decision,
-            reviewNote: req.body.reviewNote ?? null,
-            awardedPoints,
+      if (existing.user.notificationsEnabled) {
+        await tx.notification.create({
+          data: {
+            userId: existing.userId,
+            type: 'SUBMISSION_REVIEWED',
+            payload: {
+              submissionId: existing.id,
+              taskTitle: existing.task.title,
+              decision: req.body.decision,
+              reviewNote: req.body.reviewNote ?? null,
+              awardedPoints,
+            },
           },
-        },
-      });
+        });
+      }
       return { updated, awardedPoints };
     });
     res.json({ id: reviewed.updated.id, status: reviewed.updated.status, awardedPoints: reviewed.awardedPoints });

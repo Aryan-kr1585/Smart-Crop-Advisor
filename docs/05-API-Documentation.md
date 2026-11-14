@@ -15,6 +15,8 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Auth | POST `/auth/password-reset-requests` | Request recovery; public, generic response | `{email}` → `{success:true,message}`; dev also returns a local link | 422,429 |
 | Auth | POST `/auth/password-resets` | Set password with one-time token; public | `{token,password}` → `{success:true,message}` | 400,422,429 |
 | Users | GET `/users/me` | Current profile; any auth | → `{id,displayName,role,schoolId}` | 401 |
+| Users | GET `/users/me/preferences` | Read own notice preference; any auth | → `{notificationsEnabled}` | 401 |
+| Users | PATCH `/users/me/preferences` | Update own notice preference; any auth | `{notificationsEnabled}` → preference | 401,422 |
 | Users | GET `/users/me/export` | Download own profile and activity data; any auth | → JSON attachment; `Cache-Control: no-store` | 401 |
 | Users | PATCH `/users/me` | Edit permitted fields; any auth | `{displayName}` → profile | 401,422 |
 | Users | DELETE `/users/me` | Request anonymizing deletion; any auth | `{confirmation:"DELETE MY ACCOUNT"}` → `{success:true}` | 401,409,422,503 |

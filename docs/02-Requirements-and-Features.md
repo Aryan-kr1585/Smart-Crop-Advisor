@@ -26,7 +26,7 @@ Authorization must be checked server-side on every scoped operation. Hiding a cl
 | F-10 Leaderboard | Students see approved ranking; teachers monitor scoped progress | Hide private details; stable tie policy; scope enforced | Points, membership, privacy | PARTIAL — student board; policy and teacher view absent |
 | F-11 Teacher review | Teacher reviews pending submissions and student progress | Only assigned class/school; decision recorded; point grant atomic | Submissions, RBAC | PARTIAL — queue, decisions, class-scoped student point summaries/history; coverage pending |
 | F-12 Admin | Manage users, schools/classes, content, badges/challenges, activity | Admin role required; validate references; audit sensitive changes | All core entities | PARTIAL — user/school/class management and membership removal, lesson/task/quiz and badge editing, challenge creation and lifecycle editing; several edit flows absent |
-| F-13 Notifications | Notify of review results, badges, challenges | User preference, delivery failures handled, no sensitive preview | Notifications/events | PARTIAL — in-app review/award notices; no preferences or delivery service |
+| F-13 Notifications | Notify of review results, badges, challenges | Respect user opt-out for new notices; delivery failures handled; no sensitive preview | Notifications/events | PARTIAL — users can opt out of new in-app notices; no external delivery service or category-level preferences |
 
 This summary is an inspection, not test evidence. Cursor pagination now has load-more controls in the main student, teacher, and admin lists. Editing/management coverage and product policy decisions remain incomplete.
 

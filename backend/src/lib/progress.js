@@ -32,10 +32,11 @@ export async function userStats(tx, userId) {
 }
 
 export async function evaluateBadges(tx, userId) {
-  const [badges, owned, stats] = await Promise.all([
+  const [badges, owned, stats, user] = await Promise.all([
     tx.badge.findMany({ where: { active: true } }),
     tx.userBadge.findMany({ where: { userId }, select: { badgeId: true } }),
     userStats(tx, userId),
+    tx.user.findUnique({ where: { id: userId }, select: { notificationsEnabled: true } }),
   ]);
   const ownedIds = new Set(owned.map((row) => row.badgeId));
   const granted = [];
@@ -44,13 +45,15 @@ export async function evaluateBadges(tx, userId) {
     await tx.userBadge.create({
       data: { userId, badgeId: badge.id, source: String(badge.criteria?.type ?? 'criteria') },
     });
-    await tx.notification.create({
-      data: {
-        userId,
-        type: 'BADGE_EARNED',
-        payload: { badgeId: badge.id, name: badge.name, description: badge.description },
-      },
-    });
+    if (user?.notificationsEnabled) {
+      await tx.notification.create({
+        data: {
+          userId,
+          type: 'BADGE_EARNED',
+          payload: { badgeId: badge.id, name: badge.name, description: badge.description },
+        },
+      });
+    }
     granted.push(badge);
   }
   return { granted, stats };

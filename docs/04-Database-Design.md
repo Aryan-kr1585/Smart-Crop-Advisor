@@ -29,7 +29,7 @@ Many-to-many links should be explicit `ClassMembership`, `UserBadge`, and `Chall
 IDs are PostgreSQL UUIDs; mutable records generally have `createdAt`/`updatedAt`, events have `createdAt`.
 | Table | Purpose and columns | Keys, relationships, constraints, indexes |
 |---|---|---|
-| User | Identity: `id,email,passwordHash,displayName,role,status,schoolId?` | PK id; FK School; unique normalized email; index `(schoolId,role,status)`; never plaintext password |
+| User | Identity: `id,email,passwordHash,displayName,role,status,schoolId?,notificationsEnabled` | PK id; FK School; unique normalized email; index `(schoolId,role,status)`; preference defaults on; never plaintext password |
 | PasswordResetToken | Recovery: `tokenHash,userId,expiresAt,usedAt,createdAt` | Unique token hash; FK User with cascade; index `(userId,expiresAt)`; raw token is never persisted |
 | School | Tenant: `id,name,region?,status` | PK; decide unique code/name; index status/region |
 | Class | Group: `id,schoolId,name,academicYear?` | PK; FK School; unique `(schoolId,name,academicYear)`; index schoolId |

@@ -480,6 +480,16 @@ export function ProfilePage() {
   const [privacyError, setPrivacyError] = useState(null);
   const [saved, setSaved] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const preferences = useQuery({
+    queryKey: ['notification-preferences'],
+    queryFn: () => api('/users/me/preferences'),
+  });
+  const savePreferences = useMutation({
+    mutationFn: (notificationsEnabled) => api('/users/me/preferences', {
+      method: 'PATCH', body: { notificationsEnabled },
+    }),
+    onSuccess: (data) => queryClient.setQueryData(['notification-preferences'], data),
+  });
   const update = useMutation({
     mutationFn: (displayName) => api('/users/me', { method: 'PATCH', body: { displayName } }),
     onSuccess: (data) => {
@@ -508,6 +518,24 @@ export function ProfilePage() {
         </Field>
         <button type="submit" disabled={update.isPending}>Save</button>
       </form>
+      <section className="panel stack">
+        <h2>Notifications</h2>
+        <p className="muted">Choose whether EcoQuest creates new in-app notices. Existing notices remain in your inbox.</p>
+        <ErrorList error={preferences.error || savePreferences.error} />
+        <QueryState query={preferences}>
+          {(data) => (
+            <label className="choice">
+              <input
+                type="checkbox"
+                checked={data.notificationsEnabled}
+                disabled={savePreferences.isPending}
+                onChange={(event) => savePreferences.mutate(event.target.checked)}
+              />
+              <span>{savePreferences.isPending ? 'Saving preference…' : 'Enable in-app notifications'}</span>
+            </label>
+          )}
+        </QueryState>
+      </section>
       <section className="panel stack">
         <h2>Your data</h2>
         <p>Download a JSON copy of your profile, activity, submissions, points, badges, and notices.</p>

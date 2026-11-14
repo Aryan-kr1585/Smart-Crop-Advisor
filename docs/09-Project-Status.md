@@ -42,6 +42,7 @@
 - Added an admin badge manager for name/description updates, activation control, and pre-award criteria edits; criteria changes are locked once awards exist and updates are audited.
 - Added a draft-or-active choice when admins create challenges, so they can prepare scheduled activities before students can see them.
 - Added class-scoped teacher views of student point totals, levels, and paginated point histories; reviews invalidate open progress views.
+- Added a per-user in-app notification opt-out and applied it to review, points-awarded, and badge-earned notices. Existing notices are retained.
 - Added draft-or-publish choices when teachers create lessons and tasks, with status-specific feedback and management lists for both states.
 
 ## Remaining work

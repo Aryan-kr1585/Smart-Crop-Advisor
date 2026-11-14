@@ -6,7 +6,7 @@ The API includes a Node.js test for scoring. Prisma schema validation, migration
 | Type | Required focus |
 |---|---|
 | Unit | Domain rules, Zod schemas, scoring, badge criteria, date boundaries |
-| API | Contracts, status/errors, validation, pagination, rate limits, own-data export, account erasure and evidence cleanup |
+| API | Contracts, status/errors, validation, pagination, rate limits, notification opt-out, own-data export, account erasure and evidence cleanup |
 | Integration | Express + Prisma + disposable PostgreSQL, migrations and transactions |
 | Authentication | Registration, bcrypt, invalid/expired JWT and password-reset tokens, single-use reset, generic reset responses, session revocation, logout policy |
 | Authorization | Roles, school/class scope, ownership, admin-only routes, direct API access |

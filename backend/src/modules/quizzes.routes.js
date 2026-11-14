@@ -302,7 +302,7 @@ quizzesRouter.post('/:quizId/attempts', requireRoles('STUDENT'), validate({
           sourceId: quiz.id,
           idempotencyKey: `quiz:${quiz.id}:user:${req.user.id}`,
         });
-        if (awarded) {
+        if (awarded && req.user.notificationsEnabled) {
           await tx.notification.create({
             data: {
               userId: req.user.id,

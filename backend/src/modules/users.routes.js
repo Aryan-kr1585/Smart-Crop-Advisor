@@ -26,11 +26,30 @@ usersRouter.get('/me', (req, res) => {
   res.json(publicUser(req.user));
 });
 
+usersRouter.get('/me/preferences', (req, res) => {
+  res.json({ notificationsEnabled: req.user.notificationsEnabled });
+});
+
+usersRouter.patch('/me/preferences', validate({
+  body: z.object({ notificationsEnabled: z.boolean() }),
+}), async (req, res, next) => {
+  try {
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { notificationsEnabled: req.body.notificationsEnabled },
+      select: { notificationsEnabled: true },
+    });
+    res.json(user);
+  } catch (error) {
+    next(error);
+  }
+});
+
 usersRouter.get('/me/export', async (req, res, next) => {
   try {
     const userId = req.user.id;
     const [profile, memberships, submissions, attempts, ledger, badges, notifications] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, displayName: true, role: true, status: true, schoolId: true, createdAt: true } }),
+      prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, displayName: true, role: true, status: true, schoolId: true, notificationsEnabled: true, createdAt: true } }),
       prisma.classMembership.findMany({ where: { userId }, include: { class: { include: { school: { select: { id: true, name: true } } } } } }),
       prisma.submission.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, include: { task: { select: { id: true, title: true } }, asset: { select: { mimeType: true, size: true, createdAt: true } } } }),
       prisma.quizAttempt.findMany({ where: { userId }, orderBy: { submittedAt: 'desc' }, include: { quiz: { select: { id: true, title: true } } } }),
@@ -95,6 +114,7 @@ usersRouter.delete('/me', validate({
           passwordHash: replacementPasswordHash,
           status: 'SUSPENDED',
           schoolId: null,
+          notificationsEnabled: true,
           tokenVersion: { increment: 1 },
         },
       });
