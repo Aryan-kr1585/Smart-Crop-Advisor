@@ -23,6 +23,7 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - Teachers and admins can author/edit quizzes with 1–20 questions and configure attempt limits. Quiz changes are locked after the first attempt. Admins can edit class names/academic years, manage class rosters, and edit challenge dates, status, school scope, details, and linked tasks.
 - Dashboard lesson, actionable-task, and pending-review counts use server totals rather than the first page preview.
 - Admins can edit or deactivate badges; award criteria become immutable after the first grant.
+- Teachers can save new lessons and tasks as drafts or publish them immediately.
 
 ## Phase 5 – Integrated journeys
 - **Status: IMPLEMENTED IN CODE; NOT VERIFIED END TO END.** Client calls the API for registration/login, learning, quiz attempts, submissions/evidence, review, awards, and notices.

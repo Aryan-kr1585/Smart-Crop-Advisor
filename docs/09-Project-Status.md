@@ -40,6 +40,7 @@
 - Added an admin class edit endpoint and inline controls for class names and academic years, with uniqueness handling and audit records.
 - Added paginated class rosters, idempotent member-add feedback, and audited admin member removal using inactive membership history.
 - Added an admin badge manager for name/description updates, activation control, and pre-award criteria edits; criteria changes are locked once awards exist and updates are audited.
+- Added draft-or-publish choices when teachers create lessons and tasks, with status-specific feedback and management lists for both states.
 
 ## Remaining work
 

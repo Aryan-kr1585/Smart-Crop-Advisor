@@ -38,7 +38,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Quizzes | POST `/quizzes/:quizId/attempts` | Submit attempt; student | `{answers:[]}` → `{attemptId,score}` | 401,403,404,409,422 |
 | Quizzes | GET `/quizzes/:quizId/attempts/me` | Own attempts; student | → `{items:[]}` | 401,404 |
 | Tasks | GET `/tasks` | Browse available tasks; authenticated | pagination → `{items:[{id,title,instructions,status,points,startsAt,dueAt,requiresReview,canEdit}],nextCursor,totalCount}`; students also receive `openCount` (not approved and not past due) | 401,422 |
-| Tasks | POST `/tasks` | Create; teacher/admin | `{title,instructions,points,dueAt}` → task | 401,403,422 |
+| Tasks | POST `/tasks` | Create as draft/published; teacher/admin | `{title,instructions,points,dueAt,status}` → task | 401,403,422 |
 | Tasks | PATCH `/tasks/:taskId` | Edit; scoped author/admin | fields → task | 401,403,404,422 |
 | Submissions | POST `/tasks/:taskId/submissions` | Submit; student | `{text?,assetId?}` → `{id,status}` | 401,403,404,409,422 |
 | Submissions | GET `/submissions` | Review queue; scoped teacher/admin | filters/pagination → `{items,nextCursor,totalCount}` | 401,403,422 |

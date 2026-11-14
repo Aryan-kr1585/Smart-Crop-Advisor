@@ -108,9 +108,9 @@ export function TeachContent() {
     try {
       await api('/lessons', {
         method: 'POST',
-        body: { title: form.get('title'), body: form.get('body'), status: 'PUBLISHED' },
+        body: { title: form.get('title'), body: form.get('body'), status: form.get('status') },
       });
-      setMessage('Lesson published.');
+      setMessage(form.get('status') === 'PUBLISHED' ? 'Lesson published.' : 'Lesson saved as a draft.');
       event.target.reset();
       queryClient.invalidateQueries({ queryKey: ['lessons'] });
     } catch (err) {
@@ -130,12 +130,12 @@ export function TeachContent() {
           title: form.get('title'),
           instructions: form.get('instructions'),
           points: Number(form.get('points')),
-          status: 'PUBLISHED',
+          status: form.get('status'),
           dueAt: due ? new Date(due).toISOString() : undefined,
           requiresReview: true,
         },
       });
-      setMessage('Task published.');
+      setMessage(form.get('status') === 'PUBLISHED' ? 'Task published.' : 'Task saved as a draft.');
       event.target.reset();
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
     } catch (err) {
@@ -152,7 +152,13 @@ export function TeachContent() {
         <h2>New lesson</h2>
         <Field label="Title"><input name="title" required minLength={3} /></Field>
         <Field label="Body"><textarea name="body" required minLength={10} /></Field>
-        <button type="submit">Publish lesson</button>
+        <Field label="Initial status">
+          <select name="status" defaultValue="DRAFT">
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+          </select>
+        </Field>
+        <button type="submit">Save lesson</button>
       </form>
       <section className="stack">
         <h2>Manage lessons</h2>
@@ -174,10 +180,16 @@ export function TeachContent() {
         <Field label="Instructions"><textarea name="instructions" required minLength={10} /></Field>
         <Field label="Eco-points"><input name="points" type="number" min="0" max="500" defaultValue="10" required /></Field>
         <Field label="Due date"><input name="dueAt" type="datetime-local" /></Field>
-        <button type="submit">Publish task</button>
+        <Field label="Initial status">
+          <select name="status" defaultValue="DRAFT">
+            <option value="DRAFT">Draft</option>
+            <option value="PUBLISHED">Published</option>
+          </select>
+        </Field>
+        <button type="submit">Save task</button>
       </form>
       <section>
-        <h2>Published tasks</h2>
+        <h2>Manage tasks</h2>
         <QueryState query={tasks}>
           {() => (
             <ul className="list">
