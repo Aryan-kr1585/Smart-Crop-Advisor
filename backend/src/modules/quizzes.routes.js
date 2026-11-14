@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
 import { AppError, conflict, forbidden, notFound } from '../lib/errors.js';
+import { cursorWhere, pageResult } from '../lib/pagination.js';
 import { awardPoints, evaluateBadges } from '../lib/progress.js';
 import { scoreAttempt } from '../lib/scoring.js';
 import { validate } from '../middleware/validate.js';
@@ -27,9 +28,17 @@ const quizBody = z.object({
   title: z.string().trim().min(3).max(140),
   lessonId: z.string().uuid().nullable().optional(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).default('DRAFT'),
-  attemptLimit: z.number().int().min(1).max(20).default(3),
+  attemptLimit: z.number().int().min(1).max(20).nullable().default(3),
   questions: z.array(questionSchema).min(1).max(20),
 });
+
+const quizUpdateBody = z.object({
+  title: z.string().trim().min(3).max(140).optional(),
+  lessonId: z.string().uuid().nullable().optional(),
+  status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
+  attemptLimit: z.number().int().min(1).max(20).nullable().optional(),
+  questions: z.array(questionSchema).min(1).max(20).optional(),
+}).refine((body) => Object.keys(body).length > 0, { message: 'No changes provided' });
 
 const attemptBody = z.object({
   answers: z.array(z.object({
@@ -68,6 +77,43 @@ function publicQuiz(quiz, revealAnswers) {
 
 export const quizzesRouter = Router();
 quizzesRouter.use(requireAuth);
+
+quizzesRouter.get('/', requireRoles('TEACHER', 'ADMIN'), validate({
+  query: z.object({ cursor: z.string().optional(), limit: z.coerce.number().int().min(1).max(50).default(20) }),
+}), async (req, res, next) => {
+  try {
+    const filters = [];
+    if (req.user.role === 'TEACHER') filters.push({ OR: [{ status: 'PUBLISHED' }, { authorId: req.user.id }] });
+    const cursor = cursorWhere(req.query.cursor);
+    if (cursor.OR) filters.push(cursor);
+    const rows = await prisma.quiz.findMany({
+      where: filters.length ? { AND: filters } : {},
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: req.query.limit + 1,
+      include: {
+        lesson: { select: { title: true } },
+        _count: { select: { questions: true, attempts: true } },
+      },
+    });
+    const result = pageResult(rows, req.query.limit);
+    res.json({
+      items: result.items.map((quiz) => ({
+        id: quiz.id,
+        title: quiz.title,
+        status: quiz.status,
+        lessonId: quiz.lessonId,
+        lessonTitle: quiz.lesson?.title ?? null,
+        attemptLimit: quiz.attemptLimit,
+        questionsCount: quiz._count.questions,
+        attemptsCount: quiz._count.attempts,
+        canEdit: (req.user.role === 'ADMIN' || quiz.authorId === req.user.id) && quiz._count.attempts === 0,
+      })),
+      nextCursor: result.nextCursor,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
 
 quizzesRouter.get('/:quizId', validate({
   params: z.object({ quizId: z.string().uuid() }),
@@ -142,6 +188,64 @@ quizzesRouter.post('/', requireRoles('TEACHER', 'ADMIN'), validate({ body: quizB
   }
 });
 
+quizzesRouter.patch('/:quizId', requireRoles('TEACHER', 'ADMIN'), validate({
+  params: z.object({ quizId: z.string().uuid() }),
+  body: quizUpdateBody,
+}), async (req, res, next) => {
+  try {
+    const quiz = await prisma.$transaction(async (tx) => {
+      const existing = await tx.quiz.findUnique({ where: { id: req.params.quizId } });
+      if (!existing || (req.user.role !== 'ADMIN' && existing.authorId !== req.user.id)) {
+        throw notFound();
+      }
+      const attempts = await tx.quizAttempt.count({ where: { quizId: existing.id } });
+      if (attempts > 0) throw conflict('This quiz is locked because students have already attempted it');
+      if (req.body.lessonId) {
+        const lesson = await tx.lesson.findUnique({ where: { id: req.body.lessonId } });
+        if (!lesson) throw notFound('Lesson not found');
+      }
+
+      const data = {};
+      for (const field of ['title', 'status', 'attemptLimit']) {
+        if (req.body[field] !== undefined) data[field] = req.body[field];
+      }
+      if (req.body.lessonId !== undefined) data.lessonId = req.body.lessonId;
+      if (req.body.status === 'PUBLISHED' && !existing.publishedAt) data.publishedAt = new Date();
+      if (req.body.questions) {
+        await tx.question.deleteMany({ where: { quizId: existing.id } });
+        data.questions = {
+          create: req.body.questions.map((question, questionIndex) => ({
+            prompt: question.prompt,
+            points: question.points,
+            position: questionIndex + 1,
+            options: {
+              create: question.options.map((option, optionIndex) => ({
+                label: option.label,
+                isCorrect: option.isCorrect,
+                position: optionIndex + 1,
+              })),
+            },
+          })),
+        };
+      }
+      return tx.quiz.update({
+        where: { id: existing.id },
+        data,
+        include: {
+          questions: { orderBy: { position: 'asc' }, include: { options: { orderBy: { position: 'asc' } } } },
+        },
+      });
+    }, { isolationLevel: 'Serializable' });
+    res.json(publicQuiz(quiz, true));
+  } catch (error) {
+    if (error.code === 'P2034') {
+      next(conflict('The quiz changed while it was being edited. Reload and try again.'));
+      return;
+    }
+    next(error);
+  }
+});
+
 quizzesRouter.post('/:quizId/attempts', requireRoles('STUDENT'), validate({
   params: z.object({ quizId: z.string().uuid() }),
   body: attemptBody,
@@ -210,7 +314,7 @@ quizzesRouter.post('/:quizId/attempts', requireRoles('STUDENT'), validate({
         await evaluateBadges(tx, req.user.id);
       }
       return created;
-    });
+    }, { isolationLevel: 'Serializable' });
     res.status(201).json({
       attemptId: attempt.id,
       score: attempt.score,
@@ -219,6 +323,10 @@ quizzesRouter.post('/:quizId/attempts', requireRoles('STUDENT'), validate({
       results: scored.results,
     });
   } catch (error) {
+    if (error.code === 'P2034') {
+      next(conflict('The quiz changed while your attempt was being submitted. Please try again.'));
+      return;
+    }
     next(error);
   }
 });

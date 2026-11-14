@@ -5,6 +5,7 @@ import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
 import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 import { EditableLesson, EditableTask } from '../components/ContentEditors.jsx';
+import { QuizManager } from '../components/QuizManager.jsx';
 import { Evidence } from './Student.jsx';
 
 export function TeachHome() {
@@ -142,38 +143,6 @@ export function TeachContent() {
     }
   }
 
-  async function createQuiz(event) {
-    event.preventDefault();
-    setError(null);
-    const form = new FormData(event.currentTarget);
-    const lessonId = form.get('lessonId');
-    try {
-      await api('/quizzes', {
-        method: 'POST',
-        body: {
-          title: form.get('title'),
-          lessonId: lessonId || null,
-          status: 'PUBLISHED',
-          attemptLimit: 3,
-          questions: [
-            {
-              prompt: form.get('prompt'),
-              points: 10,
-              options: [1, 2, 3].map((index) => ({
-                label: form.get(`option${index}`),
-                isCorrect: form.get('correct') === String(index),
-              })),
-            },
-          ],
-        },
-      });
-      setMessage('Quiz published.');
-      event.target.reset();
-    } catch (err) {
-      setError(err);
-    }
-  }
-
   return (
     <div className="stack">
       <h1>Lessons and tasks</h1>
@@ -198,28 +167,7 @@ export function TeachContent() {
         </QueryState>
         <LoadMore query={lessons} label="lessons" />
       </section>
-      <form className="card stack" onSubmit={createQuiz}>
-        <h2>New one-question quiz</h2>
-        <Field label="Title"><input name="title" required minLength={3} /></Field>
-        <Field label="Attach to lesson">
-          <select name="lessonId" defaultValue="">
-            <option value="">None</option>
-            {lessons.data?.pages.flatMap((page) => page.items).map((lesson) => <option key={lesson.id} value={lesson.id}>{lesson.title}</option>)}
-          </select>
-        </Field>
-        <Field label="Question"><input name="prompt" required minLength={3} /></Field>
-        <Field label="Option 1"><input name="option1" required /></Field>
-        <Field label="Option 2"><input name="option2" required /></Field>
-        <Field label="Option 3"><input name="option3" required /></Field>
-        <Field label="Correct option">
-          <select name="correct" defaultValue="1">
-            <option value="1">Option 1</option>
-            <option value="2">Option 2</option>
-            <option value="3">Option 3</option>
-          </select>
-        </Field>
-        <button type="submit">Publish quiz</button>
-      </form>
+      <QuizManager lessons={lessons} />
       <form className="card stack" onSubmit={createTask}>
         <h2>New task</h2>
         <Field label="Title"><input name="title" required minLength={3} /></Field>

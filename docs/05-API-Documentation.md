@@ -25,8 +25,10 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Lessons | GET `/lessons/:lessonId` | Read; authenticated | → `{id,title,body}` | 401,404 |
 | Lessons | POST `/lessons` | Create; teacher/admin | `{title,body,status}` → lesson | 401,403,422 |
 | Lessons | PATCH `/lessons/:lessonId` | Edit; scoped author/admin | fields → lesson | 401,403,404,422 |
-| Quizzes | GET `/quizzes/:quizId` | Read, omit answer key; auth | → `{id,title,questions:[]}` | 401,404 |
+| Quizzes | GET `/quizzes` | List/manage quizzes; teacher/admin | `?cursor&limit` → `{items:[{id,title,status,questionsCount,attemptsCount,canEdit}],nextCursor}` | 401,403,422 |
+| Quizzes | GET `/quizzes/:quizId` | Read quiz; students omit answer key, teachers/admins see it | → `{id,title,questions:[]}` | 401,404 |
 | Quizzes | POST `/quizzes` | Create; teacher/admin | `{title,questions:[]}` → quiz | 401,403,422 |
+| Quizzes | PATCH `/quizzes/:quizId` | Edit quiz before any attempt; author/admin | quiz fields; optional full question replacement → quiz | 401,403,404,409,422 |
 | Quizzes | POST `/quizzes/:quizId/attempts` | Submit attempt; student | `{answers:[]}` → `{attemptId,score}` | 401,403,404,409,422 |
 | Quizzes | GET `/quizzes/:quizId/attempts/me` | Own attempts; student | → `{items:[]}` | 401,404 |
 | Tasks | GET `/tasks` | Browse available tasks; authenticated | pagination → `{items:[{id,title,instructions,status,points,startsAt,dueAt,requiresReview,canEdit}],nextCursor}` | 401,422 |
@@ -47,4 +49,4 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Notifications | GET `/notifications` | Own notices; auth | `?unread&cursor&limit` → `{items,nextCursor}` | 401,422 |
 | Notifications | PATCH `/notifications/:id/read` | Mark own read; auth | `{}` → `{id,readAt}` | 401,404 |
 
-Do not expose password hashes, answer keys before submission, private student data, provider secrets, or another user's records. Use idempotency for awards/reviews. Update this contract when API changes.
+Do not expose password hashes, answer keys before submission, private student data, provider secrets, or another user's records. Quiz edits are rejected after the first attempt to preserve recorded score meaning. Use idempotency for awards/reviews. Update this contract when API changes.

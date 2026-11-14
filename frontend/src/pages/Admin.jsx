@@ -4,6 +4,7 @@ import { api } from '../lib/api.js';
 import { ErrorList, Field, QueryState } from '../components/Shell.jsx';
 import { LoadMore, pageUrl } from '../components/Pagination.jsx';
 import { EditableLesson, EditableTask } from '../components/ContentEditors.jsx';
+import { QuizManager } from '../components/QuizManager.jsx';
 
 export function AdminHome({ section }) {
   const schools = useInfiniteQuery({
@@ -200,6 +201,9 @@ export function AdminHome({ section }) {
         <LoadMore query={tasks} label="tasks" />
         <button type="submit">Create challenge</button>
       </form>
+      <section className="stack">
+        <QuizManager lessons={lessons} />
+      </section>
       <section className="stack">
         <h2>Manage lessons</h2>
         <QueryState query={lessons}>
