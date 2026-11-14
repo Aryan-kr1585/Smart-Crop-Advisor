@@ -36,13 +36,14 @@
 - Added an admin challenge manager for dates, status, school scope, details, and linked tasks, with server-side validation and audit logging.
 - Added single-use, 30-minute password recovery tokens, password reset UI, rate limiting, session revocation, development reset links, and a production Resend delivery adapter.
 - Added authenticated JSON data export and typed-confirmation account erasure. Erasure removes direct identifiers, authored-content attribution, and user evidence while retaining anonymized score/ledger/audit relationships; media objects are removed from local or Cloudinary storage.
+- Added server-side totals for lesson catalogs, actionable student tasks, and scoped pending reviews so dashboard summary counts cover every page.
 
 ## Remaining work
 
 - Confirm the official title/problem statement and approve age/consent, privacy, evidence retention, moderation, and leaderboard policies.
 - Add broader migration/seed regression coverage and ensure deployment uses the checked-in migration history.
 - Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
-- Approve routine evidence retention, pseudonymous history retention, and backup expiry periods; improve summary-card counts where they currently show only an initial page preview.
+- Approve routine evidence retention, pseudonymous history retention, and backup expiry periods.
 - Configure and verify CI/deployment, backups, monitoring, and rollback before release.
 - Review the dependency audit findings reported during backend installation (four high severity findings; Multer 1.x is deprecated).
 

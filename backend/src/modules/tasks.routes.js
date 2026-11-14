@@ -44,16 +44,27 @@ tasksRouter.get('/', validate({ query: page.omit({ status: true }) }), async (re
       filters.push({ OR: [{ status: 'PUBLISHED' }, { authorId: req.user.id }] });
     }
     const cursor = cursorWhere(req.query.cursor);
-    if (cursor.OR) filters.push(cursor);
+    const baseWhere = filters.length ? { AND: filters } : {};
+    const where = cursor.OR ? { AND: [baseWhere, cursor] } : baseWhere;
     const studentView = req.user.role === 'STUDENT';
-    const rows = await prisma.task.findMany({
-      where: filters.length ? { AND: filters } : {},
+    const [rows, totalCount, openCount] = await Promise.all([prisma.task.findMany({
+      where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: req.query.limit + 1,
       include: studentView
         ? { submissions: { where: { userId: req.user.id }, orderBy: { createdAt: 'desc' }, take: 1 } }
         : undefined,
-    });
+    }), prisma.task.count({ where: baseWhere }), studentView
+      ? prisma.task.count({
+        where: {
+          AND: [
+            baseWhere,
+            { OR: [{ dueAt: null }, { dueAt: { gte: now } }] },
+            { submissions: { none: { userId: req.user.id, status: 'APPROVED' } } },
+          ],
+        },
+      })
+      : Promise.resolve(null)]);
     const result = pageResult(rows, req.query.limit);
     res.json({
       items: result.items.filter((task) => taskVisible(task, req.user, now)).map((task) => ({
@@ -71,6 +82,8 @@ tasksRouter.get('/', validate({ query: page.omit({ status: true }) }), async (re
           : null,
       })),
       nextCursor: result.nextCursor,
+      totalCount,
+      ...(studentView ? { openCount } : {}),
     });
   } catch (error) {
     next(error);
@@ -260,16 +273,17 @@ submissionsRouter.get('/', requireRoles('TEACHER', 'ADMIN'), validate({ query: p
       });
     }
     const cursor = cursorWhere(req.query.cursor);
-    if (cursor.OR) filters.push(cursor);
-    const rows = await prisma.submission.findMany({
-      where: filters.length ? { AND: filters } : {},
+    const baseWhere = filters.length ? { AND: filters } : {};
+    const where = cursor.OR ? { AND: [baseWhere, cursor] } : baseWhere;
+    const [rows, totalCount] = await Promise.all([prisma.submission.findMany({
+      where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: req.query.limit + 1,
       include: {
         task: { select: { id: true, title: true, points: true, instructions: true } },
         user: { select: { id: true, displayName: true } },
       },
-    });
+    }), prisma.submission.count({ where: baseWhere })]);
     const result = pageResult(rows, req.query.limit);
     res.json({
       items: result.items.map((item) => ({
@@ -283,6 +297,7 @@ submissionsRouter.get('/', requireRoles('TEACHER', 'ADMIN'), validate({ query: p
         student: item.user,
       })),
       nextCursor: result.nextCursor,
+      totalCount,
     });
   } catch (error) {
     next(error);

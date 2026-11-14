@@ -27,14 +27,14 @@ lessonsRouter.get('/', validate({ query: page }), async (req, res, next) => {
       filters.push({ OR: [{ status: 'PUBLISHED' }, { authorId: req.user.id }] });
     }
     const cursor = cursorWhere(req.query.cursor);
-    if (cursor.OR) filters.push(cursor);
-    const where = filters.length ? { AND: filters } : {};
-    const rows = await prisma.lesson.findMany({
+    const baseWhere = filters.length ? { AND: filters } : {};
+    const where = cursor.OR ? { AND: [baseWhere, cursor] } : baseWhere;
+    const [rows, totalCount] = await Promise.all([prisma.lesson.findMany({
       where,
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       take: req.query.limit + 1,
       select: { id: true, title: true, status: true, publishedAt: true, authorId: true, createdAt: true },
-    });
+    }), prisma.lesson.count({ where: baseWhere })]);
     const result = pageResult(rows, req.query.limit);
     res.json({
       items: result.items.map(({ createdAt, ...lesson }) => ({
@@ -42,6 +42,7 @@ lessonsRouter.get('/', validate({ query: page }), async (req, res, next) => {
         canEdit: req.user.role === 'ADMIN' || lesson.authorId === req.user.id,
       })),
       nextCursor: result.nextCursor,
+      totalCount,
     });
   } catch (error) {
     next(error);

@@ -17,7 +17,7 @@ export function TeachHome() {
       <h1>Your classes</h1>
       <div className="grid">
         <QueryState query={reviews}>
-          {(data) => <article className="card"><h2>Pending submissions</h2><p className="score">{data.nextCursor ? `${data.items.length}+` : data.items.length}</p><p><Link to="/teach/reviews">Open review queue</Link></p></article>}
+          {(data) => <article className="card"><h2>Pending submissions</h2><p className="score">{data.totalCount}</p><p><Link to="/teach/reviews">Open review queue</Link></p></article>}
         </QueryState>
       </div>
       <QueryState query={classes}>

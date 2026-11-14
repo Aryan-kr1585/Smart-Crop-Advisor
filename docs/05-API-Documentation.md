@@ -25,7 +25,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Classes | GET `/schools/:schoolId/classes` | List; admin/assigned teacher | pagination → `{items,nextCursor}` | 401,403,404 |
 | Classes | POST `/schools/:schoolId/classes` | Create; admin | `{name,academicYear}` → class | 401,403,409,422 |
 | Classes | POST `/classes/:classId/members` | Assign students; admin/scoped teacher | `{userIds:[]}` → `{added}` | 401,403,404,422 |
-| Lessons | GET `/lessons` | Browse available lessons; authenticated | pagination → `{items:[{id,title,status,authorId,canEdit}],nextCursor}` | 401,422 |
+| Lessons | GET `/lessons` | Browse available lessons; authenticated | pagination → `{items:[{id,title,status,authorId,canEdit}],nextCursor,totalCount}` | 401,422 |
 | Lessons | GET `/lessons/:lessonId` | Read; authenticated | → `{id,title,body}` | 401,404 |
 | Lessons | POST `/lessons` | Create; teacher/admin | `{title,body,status}` → lesson | 401,403,422 |
 | Lessons | PATCH `/lessons/:lessonId` | Edit; scoped author/admin | fields → lesson | 401,403,404,422 |
@@ -35,11 +35,11 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Quizzes | PATCH `/quizzes/:quizId` | Edit quiz before any attempt; author/admin | quiz fields; optional full question replacement → quiz | 401,403,404,409,422 |
 | Quizzes | POST `/quizzes/:quizId/attempts` | Submit attempt; student | `{answers:[]}` → `{attemptId,score}` | 401,403,404,409,422 |
 | Quizzes | GET `/quizzes/:quizId/attempts/me` | Own attempts; student | → `{items:[]}` | 401,404 |
-| Tasks | GET `/tasks` | Browse available tasks; authenticated | pagination → `{items:[{id,title,instructions,status,points,startsAt,dueAt,requiresReview,canEdit}],nextCursor}` | 401,422 |
+| Tasks | GET `/tasks` | Browse available tasks; authenticated | pagination → `{items:[{id,title,instructions,status,points,startsAt,dueAt,requiresReview,canEdit}],nextCursor,totalCount}`; students also receive `openCount` (not approved and not past due) | 401,422 |
 | Tasks | POST `/tasks` | Create; teacher/admin | `{title,instructions,points,dueAt}` → task | 401,403,422 |
 | Tasks | PATCH `/tasks/:taskId` | Edit; scoped author/admin | fields → task | 401,403,404,422 |
 | Submissions | POST `/tasks/:taskId/submissions` | Submit; student | `{text?,assetId?}` → `{id,status}` | 401,403,404,409,422 |
-| Submissions | GET `/submissions` | Review queue; scoped teacher/admin | filters/pagination → list | 401,403,422 |
+| Submissions | GET `/submissions` | Review queue; scoped teacher/admin | filters/pagination → `{items,nextCursor,totalCount}` | 401,403,422 |
 | Submissions | POST `/submissions/:id/review` | Approve/reject; scoped teacher/admin | `{decision,reviewNote?}` → `{id,status,awardedPoints}` | 401,403,404,409,422 |
 | Upload | POST `/uploads/signature` | Authorize upload; eligible student | `{fileName,mimeType,size}` → signed params | 401,403,422,429 |
 | Points | GET `/users/me/points` | Own summary/history; student | pagination → `{total,entries,nextCursor}` | 401,422 |

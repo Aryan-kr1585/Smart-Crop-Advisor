@@ -29,7 +29,7 @@ export function StudentHome() {
           {(data) => (
             <article className="card">
               <h2>Lessons</h2>
-              <p>{data.items.length}{data.nextCursor ? '+' : ''} published lessons available</p>
+              <p>{data.totalCount} published lessons available</p>
               <Link to="/learn/lessons">Continue reading</Link>
             </article>
           )}
@@ -38,7 +38,7 @@ export function StudentHome() {
           {(data) => (
             <article className="card">
               <h2>Open tasks</h2>
-              <p>{data.items.filter((task) => task.mySubmission?.status !== 'APPROVED').length}{data.nextCursor ? '+' : ''} tasks still waiting on you</p>
+              <p>{data.openCount} tasks to complete or awaiting review</p>
               <Link to="/learn/tasks">See tasks</Link>
             </article>
           )}
