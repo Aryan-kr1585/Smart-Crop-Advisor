@@ -273,25 +273,7 @@ function SchoolClasses({ school, onError, onDone }) {
       </form>
       <QueryState query={classes}>
         {() => classItems.length === 0 ? <p className="muted">No classes have been created for this school yet.</p> : classItems.map((item) => (
-          <form key={item.id} className="stack" onSubmit={async (event) => {
-            event.preventDefault();
-            const userId = new FormData(event.currentTarget).get('userId');
-            try {
-              await api(`/classes/${item.id}/members`, { method: 'POST', body: { userIds: [userId] } });
-              onDone(`Added to ${item.name}.`);
-            } catch (err) { onError(err); }
-          }}>
-            <h3>{item.name}</h3>
-            <Field label="Add an existing account">
-              <select name="userId" required defaultValue="">
-                <option value="" disabled>Choose a person</option>
-                {userItems.map((person) => (
-                  <option key={person.id} value={person.id}>{person.displayName} ({person.role.toLowerCase()})</option>
-                ))}
-              </select>
-            </Field>
-            <button type="submit" className="secondary">Add to class</button>
-          </form>
+          <SchoolClass key={item.id} item={item} people={userItems} onError={onError} onDone={onDone} />
         ))}
       </QueryState>
       {users.isLoading && <p className="status" role="status">Loading people…</p>}
@@ -299,5 +281,57 @@ function SchoolClasses({ school, onError, onDone }) {
       <LoadMore query={classes} label="classes" />
       <LoadMore query={users} label="people" />
     </section>
+  );
+}
+
+function SchoolClass({ item, people, onError, onDone }) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <article className="card stack">
+      <div className="spread">
+        <div>
+          <h3>{item.name}</h3>
+          <p className="muted">{item.academicYear || 'Academic year not set'}</p>
+        </div>
+        {!editing && <button type="button" className="secondary" onClick={() => setEditing(true)}>Edit class</button>}
+      </div>
+      {editing && <form className="stack" onSubmit={async (event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        try {
+          await api(`/classes/${item.id}`, {
+            method: 'PATCH',
+            body: { name: form.get('name'), academicYear: form.get('academicYear') || null },
+          });
+          setEditing(false);
+          onDone(`Updated ${form.get('name')}.`);
+        } catch (err) { onError(err); }
+      }}>
+        <Field label="Class name"><input name="name" defaultValue={item.name} minLength={1} maxLength={80} required /></Field>
+        <Field label="Academic year"><input name="academicYear" defaultValue={item.academicYear ?? ''} maxLength={20} placeholder="2026-27" /></Field>
+        <div className="row">
+          <button type="submit">Save class</button>
+          <button type="button" className="secondary" onClick={() => setEditing(false)}>Cancel</button>
+        </div>
+      </form>}
+      <form className="stack" onSubmit={async (event) => {
+        event.preventDefault();
+        const userId = new FormData(event.currentTarget).get('userId');
+        try {
+          await api(`/classes/${item.id}/members`, { method: 'POST', body: { userIds: [userId] } });
+          onDone(`Added to ${item.name}.`);
+        } catch (err) { onError(err); }
+      }}>
+        <Field label="Add an existing account">
+          <select name="userId" required defaultValue="">
+            <option value="" disabled>Choose a person</option>
+            {people.map((person) => (
+              <option key={person.id} value={person.id}>{person.displayName} ({person.role.toLowerCase()})</option>
+            ))}
+          </select>
+        </Field>
+        <button type="submit" className="secondary">Add to class</button>
+      </form>
+    </article>
   );
 }

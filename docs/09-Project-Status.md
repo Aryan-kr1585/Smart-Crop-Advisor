@@ -37,6 +37,7 @@
 - Added single-use, 30-minute password recovery tokens, password reset UI, rate limiting, session revocation, development reset links, and a production Resend delivery adapter.
 - Added authenticated JSON data export and typed-confirmation account erasure. Erasure removes direct identifiers, authored-content attribution, and user evidence while retaining anonymized score/ledger/audit relationships; media objects are removed from local or Cloudinary storage.
 - Added server-side totals for lesson catalogs, actionable student tasks, and scoped pending reviews so dashboard summary counts cover every page.
+- Added an admin class edit endpoint and inline controls for class names and academic years, with uniqueness handling and audit records.
 
 ## Remaining work
 

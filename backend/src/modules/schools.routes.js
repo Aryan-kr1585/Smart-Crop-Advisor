@@ -165,6 +165,39 @@ schoolsRouter.post('/schools/:schoolId/classes', requireRoles('ADMIN'), validate
   }
 });
 
+schoolsRouter.patch('/classes/:classId', requireRoles('ADMIN'), validate({
+  params: z.object({ classId: z.string().uuid() }),
+  body: z.object({
+    name: z.string().trim().min(1).max(80).optional(),
+    academicYear: z.string().trim().max(20).nullable().optional(),
+  }).refine((body) => Object.keys(body).length > 0, { message: 'No changes provided' }),
+}), async (req, res, next) => {
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      const cls = await tx.class.update({ where: { id: req.params.classId }, data: req.body });
+      await writeAudit(tx, {
+        actorId: req.user.id,
+        action: 'CLASS_UPDATE',
+        entityType: 'Class',
+        entityId: cls.id,
+        metadata: { changedFields: Object.keys(req.body) },
+      });
+      return cls;
+    });
+    res.json({ id: updated.id, name: updated.name, academicYear: updated.academicYear, schoolId: updated.schoolId });
+  } catch (error) {
+    if (error.code === 'P2025') {
+      next(notFound());
+      return;
+    }
+    if (error.code === 'P2002') {
+      next(conflict('This class already exists for the academic year'));
+      return;
+    }
+    next(error);
+  }
+});
+
 schoolsRouter.post('/classes/:classId/members', requireRoles('ADMIN', 'TEACHER'), validate({
   params: z.object({ classId: z.string().uuid() }),
   body: z.object({ userIds: z.array(z.string().uuid()).min(1).max(50) }),
