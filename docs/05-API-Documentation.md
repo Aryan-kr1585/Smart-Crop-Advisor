@@ -25,6 +25,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Schools | POST `/schools` | Create; admin | `{name}` → `{id,name}` | 401,403,409,422 |
 | Schools | PATCH `/schools/:schoolId` | Update; admin | `{name,status}` → school | 401,403,404,422 |
 | Classes | GET `/schools/:schoolId/classes` | List; admin/assigned teacher | pagination → `{items,nextCursor}` | 401,403,404 |
+| Classes | GET `/classes/:classId/progress` | Ranked point totals; admin/assigned teacher | `?cursor&limit` → `{items:[{rank,userId,displayName,points}],nextCursor}` | 401,403,404,422 |
 | Classes | POST `/schools/:schoolId/classes` | Create; admin | `{name,academicYear}` → class | 401,403,409,422 |
 | Classes | PATCH `/classes/:classId` | Edit name/year; admin | `{name?,academicYear?}` → class | 401,403,404,409,422 |
 | Classes | POST `/classes/:classId/members` | Assign members; admin/scoped teacher | `{userIds:[]}` → `{added,alreadyMembers}` | 401,403,404,409,422 |
@@ -41,7 +42,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Quizzes | GET `/quizzes/:quizId/attempts/me` | Own attempts; student | → `{items:[]}` | 401,404 |
 | Tasks | GET `/tasks` | Browse available tasks; authenticated | pagination → `{items:[{id,title,instructions,status,points,startsAt,dueAt,requiresReview,canEdit}],nextCursor,totalCount}`; students also receive `openCount` (not approved and not past due) | 401,422 |
 | Tasks | POST `/tasks` | Create as draft/published; teacher/admin | `{title,instructions,points,dueAt,status}` → task | 401,403,422 |
-| Tasks | PATCH `/tasks/:taskId` | Edit; scoped author/admin | fields → task | 401,403,404,422 |
+| Tasks | PATCH `/tasks/:taskId` | Edit; scoped author/admin | fields including `startsAt`/`dueAt`; due must follow start → task | 401,403,404,422 |
 | Submissions | POST `/tasks/:taskId/submissions` | Submit; student | `{text?,assetId?}` → `{id,status}` | 401,403,404,409,422 |
 | Submissions | GET `/submissions` | Review queue; scoped teacher/admin | filters/pagination → `{items,nextCursor,totalCount}` | 401,403,422 |
 | Submissions | POST `/submissions/:id/review` | Approve/reject; scoped teacher/admin | `{decision,reviewNote?}` → `{id,status,awardedPoints}` | 401,403,404,409,422 |

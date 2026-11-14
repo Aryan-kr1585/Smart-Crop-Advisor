@@ -100,12 +100,14 @@ export function EditableTask({ task }) {
         <form className="stack" onSubmit={(event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
+          const startsAt = form.get('startsAt');
           const dueAt = form.get('dueAt');
           update.mutate({
             title: form.get('title'),
             instructions: form.get('instructions'),
             points: Number(form.get('points')),
             status: form.get('status'),
+            startsAt: startsAt ? new Date(startsAt).toISOString() : null,
             dueAt: dueAt ? new Date(dueAt).toISOString() : null,
             requiresReview: form.get('requiresReview') === 'on',
           });
@@ -114,6 +116,7 @@ export function EditableTask({ task }) {
           <Field label="Title"><input name="title" defaultValue={task.title} required minLength={3} maxLength={140} /></Field>
           <Field label="Instructions"><textarea name="instructions" defaultValue={task.instructions} required minLength={10} maxLength={8000} /></Field>
           <Field label="Eco-points"><input name="points" type="number" min="0" max="500" defaultValue={task.points} required /></Field>
+          <Field label="Start date"><input name="startsAt" type="datetime-local" defaultValue={localDateTime(task.startsAt)} /></Field>
           <Field label="Due date"><input name="dueAt" type="datetime-local" defaultValue={localDateTime(task.dueAt)} /></Field>
           <Field label="Status">
             <select name="status" defaultValue={task.status}>

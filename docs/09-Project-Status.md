@@ -43,6 +43,8 @@
 - Added a draft-or-active choice when admins create challenges, so they can prepare scheduled activities before students can see them.
 - Added class-scoped teacher views of student point totals, levels, and paginated point histories; reviews invalidate open progress views.
 - Added a per-user in-app notification opt-out and applied it to review, points-awarded, and badge-earned notices. Existing notices are retained.
+- Added task start-date controls at creation/edit time, student availability messaging, and server-side validation that due dates follow start dates.
+- Added a paginated class-scoped teacher points ranking with a stable points/name tie order and server-side class membership authorization.
 - Added draft-or-publish choices when teachers create lessons and tasks, with status-specific feedback and management lists for both states.
 
 ## Remaining work

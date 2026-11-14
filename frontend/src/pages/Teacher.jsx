@@ -74,6 +74,9 @@ function ClassRoster() {
       {schoolId && classes.isSuccess && classItems.length === 0 && <p className="muted">No assigned classes yet.</p>}
       <LoadMore query={classes} label="classes" />
       {classId && (
+        <ClassProgressBoard classId={classId} />
+      )}
+      {classId && (
         <QueryState query={students}>
           {() => (
             <>
@@ -96,6 +99,33 @@ function ClassRoster() {
           )}
         </QueryState>
       )}
+    </section>
+  );
+}
+
+function ClassProgressBoard({ classId }) {
+  const progress = useInfiniteQuery({
+    queryKey: ['class-progress-board', classId],
+    initialPageParam: null,
+    queryFn: ({ pageParam }) => api(pageUrl(`/classes/${classId}/progress`, pageParam)),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+  });
+  return (
+    <section className="card stack">
+      <h3>Class progress ranking</h3>
+      <QueryState query={progress}>
+        {() => {
+          const students = progress.data.pages.flatMap((page) => page.items);
+          return students.length === 0 ? <p className="muted">No active students in this class.</p> : (
+            <ol start={students[0].rank}>
+              {students.map((student) => (
+                <li key={student.userId}>{student.displayName} · {student.points} eco-points</li>
+              ))}
+            </ol>
+          );
+        }}
+      </QueryState>
+      <LoadMore query={progress} label="ranked students" />
     </section>
   );
 }
@@ -172,6 +202,7 @@ export function TeachContent() {
     setError(null);
     const form = new FormData(event.currentTarget);
     try {
+      const starts = form.get('startsAt');
       const due = form.get('dueAt');
       await api('/tasks', {
         method: 'POST',
@@ -180,6 +211,7 @@ export function TeachContent() {
           instructions: form.get('instructions'),
           points: Number(form.get('points')),
           status: form.get('status'),
+          startsAt: starts ? new Date(starts).toISOString() : undefined,
           dueAt: due ? new Date(due).toISOString() : undefined,
           requiresReview: true,
         },
@@ -228,6 +260,7 @@ export function TeachContent() {
         <Field label="Title"><input name="title" required minLength={3} /></Field>
         <Field label="Instructions"><textarea name="instructions" required minLength={10} /></Field>
         <Field label="Eco-points"><input name="points" type="number" min="0" max="500" defaultValue="10" required /></Field>
+        <Field label="Start date"><input name="startsAt" type="datetime-local" /></Field>
         <Field label="Due date"><input name="dueAt" type="datetime-local" /></Field>
         <Field label="Initial status">
           <select name="status" defaultValue="DRAFT">

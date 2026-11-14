@@ -293,6 +293,7 @@ export function TaskDetail() {
             <p className="kicker">{data.points} eco-points</p>
             <h1>{data.title}</h1>
             {data.instructions.split('\n\n').map((paragraph) => <p key={paragraph.slice(0, 24)}>{paragraph}</p>)}
+            {data.startsAt && <p className="muted">Available from {new Date(data.startsAt).toLocaleString()}</p>}
             {data.dueAt && <p className="muted">Due {new Date(data.dueAt).toLocaleString()}</p>}
             {data.mySubmission && (
               <section className="card stack">

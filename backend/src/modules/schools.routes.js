@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma.js';
-import { conflict, notFound } from '../lib/errors.js';
+import { AppError, conflict, notFound } from '../lib/errors.js';
 import { cursorWhere, pageResult } from '../lib/pagination.js';
 import { writeAudit } from '../lib/progress.js';
 import { validate } from '../middleware/validate.js';
@@ -11,6 +11,21 @@ const page = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });
+
+function decodeProgressCursor(cursor) {
+  if (!cursor) return null;
+  try {
+    const value = JSON.parse(Buffer.from(cursor, 'base64url').toString());
+    if (!Number.isInteger(value.points) || typeof value.displayName !== 'string' || typeof value.id !== 'string') return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function compareProgress(a, b) {
+  return b.points - a.points || a.displayName.localeCompare(b.displayName) || a.id.localeCompare(b.id);
+}
 
 export const schoolsRouter = Router();
 schoolsRouter.use(requireAuth);
@@ -124,6 +139,66 @@ schoolsRouter.get('/schools/:schoolId/classes', requireRoles('ADMIN', 'TEACHER')
         schoolId: item.schoolId,
       })),
       nextCursor: result.nextCursor,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+schoolsRouter.get('/classes/:classId/progress', requireRoles('ADMIN', 'TEACHER'), validate({
+  params: z.object({ classId: z.string().uuid() }),
+  query: page,
+}), async (req, res, next) => {
+  try {
+    const cls = await prisma.class.findUnique({ where: { id: req.params.classId }, select: { id: true } });
+    if (!cls) {
+      next(notFound());
+      return;
+    }
+    if (req.user.role === 'TEACHER') {
+      const assigned = await prisma.classMembership.findFirst({
+        where: { classId: cls.id, userId: req.user.id, status: 'ACTIVE' },
+        select: { userId: true },
+      });
+      if (!assigned) {
+        next(notFound());
+        return;
+      }
+    }
+    const memberships = await prisma.classMembership.findMany({
+      where: { classId: cls.id, status: 'ACTIVE', user: { role: 'STUDENT', status: 'ACTIVE' } },
+      select: { user: { select: { id: true, displayName: true } } },
+    });
+    const userIds = memberships.map((membership) => membership.user.id);
+    const totals = await prisma.pointLedger.groupBy({
+      by: ['userId'],
+      where: { userId: { in: userIds } },
+      _sum: { amount: true },
+    });
+    const totalByUser = new Map(totals.map((row) => [row.userId, row._sum.amount ?? 0]));
+    const ranked = memberships.map(({ user }) => ({
+      id: user.id,
+      displayName: user.displayName,
+      points: totalByUser.get(user.id) ?? 0,
+    })).sort(compareProgress);
+    const cursor = decodeProgressCursor(req.query.cursor);
+    if (req.query.cursor && !cursor) {
+      next(new AppError(422, 'VALIDATION_ERROR', 'Request could not be processed', [
+        { path: 'cursor', message: 'Cursor is invalid' },
+      ]));
+      return;
+    }
+    const cursorIndex = cursor ? ranked.findIndex((row) => compareProgress(row, cursor) > 0) : 0;
+    const start = cursorIndex < 0 ? ranked.length : cursorIndex;
+    const rows = ranked.slice(start, start + req.query.limit + 1);
+    const hasMore = rows.length > req.query.limit;
+    const items = hasMore ? rows.slice(0, req.query.limit) : rows;
+    const last = items[items.length - 1];
+    res.json({
+      items: items.map((row, index) => ({ rank: start + index + 1, userId: row.id, displayName: row.displayName, points: row.points })),
+      nextCursor: hasMore && last
+        ? Buffer.from(JSON.stringify(last)).toString('base64url')
+        : null,
     });
   } catch (error) {
     next(error);

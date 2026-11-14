@@ -177,9 +177,10 @@ tasksRouter.patch('/:taskId', requireRoles('TEACHER', 'ADMIN'), validate({
     instructions: z.string().trim().min(10).max(8000).optional(),
     points: z.number().int().min(0).max(500).optional(),
     status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']).optional(),
+    startsAt: z.string().datetime().nullable().optional(),
     dueAt: z.string().datetime().nullable().optional(),
     requiresReview: z.boolean().optional(),
-  }),
+  }).refine((body) => Object.keys(body).length > 0, { message: 'No changes provided' }),
 }), async (req, res, next) => {
   try {
     const existing = await prisma.task.findUnique({ where: { id: req.params.taskId } });
@@ -187,8 +188,21 @@ tasksRouter.patch('/:taskId', requireRoles('TEACHER', 'ADMIN'), validate({
       next(notFound());
       return;
     }
+    const startsAt = req.body.startsAt === undefined
+      ? existing.startsAt
+      : req.body.startsAt ? new Date(req.body.startsAt) : null;
+    const dueAt = req.body.dueAt === undefined
+      ? existing.dueAt
+      : req.body.dueAt ? new Date(req.body.dueAt) : null;
+    if (startsAt && dueAt && dueAt <= startsAt) {
+      next(new AppError(422, 'VALIDATION_ERROR', 'Request could not be processed', [
+        { path: 'dueAt', message: 'Due date must be after the start date' },
+      ]));
+      return;
+    }
     const data = { ...req.body };
-    if (req.body.dueAt !== undefined) data.dueAt = req.body.dueAt ? new Date(req.body.dueAt) : null;
+    if (req.body.startsAt !== undefined) data.startsAt = startsAt;
+    if (req.body.dueAt !== undefined) data.dueAt = dueAt;
     const task = await prisma.task.update({ where: { id: existing.id }, data });
     res.json({ id: task.id, title: task.title, status: task.status, points: task.points, dueAt: task.dueAt });
   } catch (error) {
