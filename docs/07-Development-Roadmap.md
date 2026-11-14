@@ -4,11 +4,11 @@ Roadmap state reflects the repository as inspected on 2026-11-14. Statuses descr
 
 ## Phase 0 – Scope and setup
 - **Status: IN PROGRESS / NEEDS CONFIRMATION.** The provisional EcoQuest implementation exists, but the repository and supplied title say Smart Crop Advisor. Obtain an authoritative title/problem statement before presenting or deploying.
-- The JS frontend/backend manifests, backend env example, seed runner, and root scripts exist. A Node version, lockfiles, and checked-in Prisma migration are still absent.
+- **Completed in this pass:** Node 24 is pinned in `.nvmrc` and package engine fields; frontend/backend lockfiles are checked in; root setup uses `npm ci`.
 
 ## Phase 1 – Data model and persistence
-- **Status: IMPLEMENTED IN SOURCE; MIGRATION PENDING.** Prisma models cover schools/classes, users, lessons/quizzes, tasks/submissions, uploads, points, badges, challenges, notifications, and audit records.
-- `npm run setup` invokes Prisma using `database/prisma/schema.prisma` and then the backend seed runner. Generate and review a migration from a disposable development database, then commit it before shared deployment. Privacy/retention policy remains open.
+- **Status: IMPLEMENTED; FRESH DATABASE VERIFIED.** Prisma models cover schools/classes, users, lessons/quizzes, tasks/submissions, uploads, points, badges, challenges, notifications, and audit records. Initial migration is checked in under `database/prisma/migrations`.
+- `npm run setup` invokes Prisma using `database/prisma/schema.prisma` and then the backend seed runner. The migration was generated, applied, and seeded against a disposable PostgreSQL 18 database. Privacy/retention policy remains open.
 
 ## Phase 2 – API foundation and authentication
 - **Status: IMPLEMENTED; VERIFICATION PENDING.** Express app, validated env, Prisma client, safe errors, JWT auth/revocation, bcrypt, RBAC, rate limits, Helmet, CORS, and health endpoint are present.
@@ -30,7 +30,7 @@ Roadmap state reflects the repository as inspected on 2026-11-14. Statuses descr
 - **Status: PARTIAL.** Points, levels, streaks, badges, challenges, and leaderboard are implemented. Review semantic/keyboard/screen-reader behavior and approve ranking, scoring, consent, language, and retention policy.
 
 ## Phase 7 – Release quality and security
-- **Status: NOT COMPLETE.** One scoring test exists; no checks were run for this pass. Add unit/API/integration/authz/upload/UI coverage, dependency review, and privacy/accessibility checks with synthetic data.
+- **Status: NOT COMPLETE.** One scoring test exists; schema validation and a frontend production build passed, but the test suite was not run. Backend install reported four high severity dependency findings, including a Multer 1.x deprecation. Add API/integration/authz/upload/UI coverage, review dependency findings, and complete privacy/accessibility checks with synthetic data.
 
 ## Phase 8 – Deployment and presentation
 - **Status: NOT STARTED.** No CI workflow, production config, or deployed service is present. Requires scope approval, migration review, accounts/secrets, backup/restore procedure, release checks, and rollback ownership.

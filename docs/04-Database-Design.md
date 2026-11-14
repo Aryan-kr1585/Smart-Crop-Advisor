@@ -1,6 +1,6 @@
 # 4. Database Design
 
-**Implemented schema:** `database/prisma/schema.prisma` defines the PostgreSQL model and `backend/scripts/db/seed.js` supplies synthetic development records. No migration is checked in and this inspection did not access or modify a database. Confirm privacy, retention, membership, and scoring policies before production.
+**Implemented schema:** `database/prisma/schema.prisma` defines the PostgreSQL model, `database/prisma/migrations/` contains the initial migration, and `backend/scripts/db/seed.js` supplies synthetic development records. The initial migration was applied and the seed completed against a disposable local PostgreSQL 18 database. Confirm privacy, retention, membership, and scoring policies before production.
 
 ## ER diagram
 ```mermaid

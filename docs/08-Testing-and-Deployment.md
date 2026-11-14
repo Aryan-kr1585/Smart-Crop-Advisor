@@ -1,6 +1,6 @@
 # 8. Testing and Deployment
 
-The API includes a Node.js test for scoring. No test/build commands were run during this implementation pass. Expand coverage to the acceptance criteria below before release; passing status is not claimed.
+The API includes a Node.js test for scoring. Prisma schema validation, migration/seed on a disposable database, and the frontend production build passed during this implementation pass; the automated test suite was not run. Expand coverage to the acceptance criteria below before release; passing status is not claimed.
 
 ## Test strategy
 | Type | Required focus |
@@ -22,7 +22,7 @@ Use synthetic fixtures only, never real student data or production credentials.
 Use bcrypt; managed JWT secrets; Zod validation; server-side resource authorization; HTTPS; restrictive CORS; auth/upload rate limits; secure headers; reviewed dependencies; Prisma parameterized queries. Restrict uploads and verify ownership/size/type server-side. Logs must omit passwords, tokens, private URLs, and unnecessary student details. Decide consent/age, minimization, access/export/deletion, evidence retention, incident handling, leaderboard visibility, and applicable legal duties before production.
 
 ## Local setup and environment
-Package manifests and scripts exist. See the repository [README](../README.md) for local setup. Choose and document the supported Node version; use local PostgreSQL or non-production Neon; configure placeholder-only env; generate and review a Prisma migration; start API/client with documented scripts and local CORS/API URL.
+Package manifests, lockfiles, Node 24 pin, and scripts exist. See the repository [README](../README.md) for local setup. Use local PostgreSQL or non-production Neon; configure placeholder-only env; apply the checked-in Prisma migration; start API/client with documented scripts and local CORS/API URL. Fresh migration and seed were exercised on a disposable database.
 
 Proposed environment names: `DATABASE_URL`, `JWT_SECRET` (or key pair), `CLIENT_ORIGIN`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `NODE_ENV`, API port. Validate configuration at startup, separate secrets per environment, never expose secrets through Vite variables or logs.
 
