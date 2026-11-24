@@ -9,6 +9,7 @@ import { quizzesRouter } from '../modules/quizzes.routes.js';
 import { submissionsRouter, tasksRouter } from '../modules/tasks.routes.js';
 import { badgesRouter, challengesRouter, leaderboardRouter, notificationsRouter } from '../modules/engage.routes.js';
 import { uploadsRouter } from '../modules/uploads.routes.js';
+import { activitiesRouter } from '../modules/activities.routes.js';
 
 export const api = Router();
 
@@ -39,3 +40,4 @@ api.use('/challenges', challengesRouter);
 api.use('/leaderboard', leaderboardRouter);
 api.use('/notifications', notificationsRouter);
 api.use('/uploads', uploadsRouter);
+api.use('/activities', activitiesRouter);

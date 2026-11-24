@@ -48,7 +48,7 @@ usersRouter.patch('/me/preferences', validate({
 usersRouter.get('/me/export', async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const [profile, memberships, submissions, attempts, ledger, badges, notifications] = await Promise.all([
+    const [profile, memberships, submissions, attempts, ledger, badges, notifications, activityCompletions] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { id: true, email: true, displayName: true, role: true, status: true, schoolId: true, notificationsEnabled: true, createdAt: true } }),
       prisma.classMembership.findMany({ where: { userId }, include: { class: { include: { school: { select: { id: true, name: true } } } } } }),
       prisma.submission.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, include: { task: { select: { id: true, title: true } }, asset: { select: { mimeType: true, size: true, createdAt: true } } } }),
@@ -56,6 +56,7 @@ usersRouter.get('/me/export', async (req, res, next) => {
       prisma.pointLedger.findMany({ where: { userId }, orderBy: { createdAt: 'desc' } }),
       prisma.userBadge.findMany({ where: { userId }, include: { badge: { select: { name: true, description: true } } } }),
       prisma.notification.findMany({ where: { userId }, orderBy: { createdAt: 'desc' }, select: { type: true, payload: true, readAt: true, createdAt: true } }),
+      prisma.activityCompletion.findMany({ where: { userId }, select: { activityId: true, completedAt: true } }),
     ]);
     if (!profile) {
       next(notFound());
@@ -64,7 +65,7 @@ usersRouter.get('/me/export', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="ecoquest-data-${userId}.json"`);
-    res.json({ exportedAt: new Date().toISOString(), profile, memberships, submissions, quizAttempts: attempts, pointLedger: ledger, badges, notifications });
+    res.json({ exportedAt: new Date().toISOString(), profile, memberships, submissions, quizAttempts: attempts, pointLedger: ledger, badges, notifications, activityCompletions });
   } catch (error) {
     next(error);
   }
@@ -101,6 +102,7 @@ usersRouter.delete('/me', validate({
       await tx.uploadAsset.deleteMany({ where: { userId: req.user.id } });
       await tx.passwordResetToken.deleteMany({ where: { userId: req.user.id } });
       await tx.notification.deleteMany({ where: { userId: req.user.id } });
+      await tx.activityCompletion.deleteMany({ where: { userId: req.user.id } });
       await tx.userBadge.deleteMany({ where: { userId: req.user.id } });
       await tx.classMembership.deleteMany({ where: { userId: req.user.id } });
       await tx.lesson.updateMany({ where: { authorId: req.user.id }, data: { authorId: null } });

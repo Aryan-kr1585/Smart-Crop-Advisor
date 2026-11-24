@@ -1,6 +1,6 @@
 # 9. Project Status
 
-**Inspection date:** 2026-11-15 (Asia/Kolkata)
+**Inspection date:** 2026-11-24 (Asia/Kolkata)
 
 ## Observed repository state
 
@@ -15,7 +15,7 @@
 | Database | Prisma PostgreSQL schema, initial migration, and demo seed. Initial migration applied successfully and demo records seeded in a disposable PostgreSQL 18 database |
 | Core workflows | Lessons, quiz authoring/attempts, tasks/submissions/review, points, badges, challenges, leaderboard, notices, schools/classes, account management |
 | Uploads | Local API disk path by default; optional Cloudinary signing/retrieval support; account deletion removes owned evidence; routine retention and consent policy unresolved |
-| Verification | Prisma schema validation passed; migration applied and demo seed completed on a disposable PostgreSQL 18 database; frontend production build passed. Automated tests were not run |
+| Verification | Frontend build and all four backend tests passed; Prisma schema validation passed; four migrations applied to the verified-empty local PostgreSQL database; live API health returned 200 and the protected activity endpoint returned 401 without a token. Demo seed and full authenticated browser journey not run |
 | Deployment | GitHub Actions validation/build workflow added; hosted execution not yet observed; no production deployment configuration |
 | Secrets | `.env` exists locally and is ignored; its values were not read or changed |
 
@@ -57,6 +57,17 @@
 - Add and run API, database integration, authorization, upload, UI, accessibility, and production checks.
 - Approve routine evidence retention, pseudonymous history retention, and backup expiry periods.
 - Verify hosted CI runs; configure deployment, backups, monitoring, and rollback before release.
-- Review the dependency audit findings reported during backend installation (four high severity findings; Multer 1.x is deprecated).
+- Plan major Prisma 7 and React Router 7 upgrades to clear remaining advisory findings; review the deprecated Multer 1.x dependency before production.
+- Run verification under the repository-pinned Node 24 runtime and add API/database/UI coverage for the interactive activities.
 
 No stakeholder approval, end-to-end verification, deployment, or impact outcome is claimed. See [Roadmap](07-Development-Roadmap.md), [Testing and Deployment](08-Testing-and-Deployment.md), and [README](../README.md).
+## Interactive learning activities (2026-11-24)
+- Added garden exploration with three viewpoints and clickable soil, sunlight, and water features; garden sorting with corrective feedback; a keyboard/touch cleanup game; and a small tabular Q-learning demonstration.
+- Added authenticated student completion tracking, a Prisma model/migration, and completion data to account export. Completion does not award eco-points.
+- These activities are browser-based prototypes in the existing React application, not Unity scenes. Production database migration and device/accessibility review remain outstanding.
+- Verification for this change: frontend production build passed; all four backend tests passed; Prisma schema validation and modified backend syntax checks passed. The activity migration and preceding checked-in migrations were applied to the verified-empty local development database. Live health returned 200; unauthenticated activity progress returned 401. API and database processes were stopped after the checks.
+- Hardened completion writes with a per-IP request limit and capped quiz answer arrays at the maximum supported 20 questions. Upgraded Zod to 4.6.7 to address its high-severity constrained-collection memory advisory; existing tests and build still pass.
+- Dependency audit still reports four high-severity issues through Prisma 6.19.3 CLI/config dependencies (fixed by Prisma 7, a breaking upgrade) and two moderate React Router advisories (fixed by React Router 7, a breaking upgrade). The current frontend uses client-side routing only and internal/static navigation destinations; no SSR hydration code or user-supplied route destination was found. Review and plan these major dependency upgrades before production.
+- The installed runtime is Node 26.13.1, while the repository targets Node 24. Checks passed under Node 26; supported-runtime verification under Node 24 remains outstanding.
+- The Node `--watch` development script hit `EMFILE` in this environment. Running the API directly worked; use Node 24 for follow-up development-runtime checks.
+- The project identity remains unresolved: repository title says Smart Crop Advisor while the implemented product is provisional EcoQuest.

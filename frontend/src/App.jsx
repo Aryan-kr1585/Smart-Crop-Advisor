@@ -17,6 +17,7 @@ import {
 } from './pages/Student.jsx';
 import { ReviewPage, TeachContent, TeachHome } from './pages/Teacher.jsx';
 import { AdminHome } from './pages/Admin.jsx';
+import { ActivitiesPage, ActivityPage } from './pages/Activities.jsx';
 
 function RequireAuth({ roles }) {
   const { user, loading } = useAuth();
@@ -47,6 +48,7 @@ function linksFor(role) {
     { to: '/learn', label: 'Home', end: true },
     { to: '/learn/lessons', label: 'Lessons' },
     { to: '/learn/tasks', label: 'Tasks' },
+    { to: '/learn/activities', label: 'Activities' },
     { to: '/learn/progress', label: 'Eco-points' },
     { to: '/learn/board', label: 'Leaderboard' },
     { to: '/learn/notices', label: 'Notices' },
@@ -69,6 +71,8 @@ export default function App() {
         <Route path="/learn/quizzes/:quizId" element={<QuizPage />} />
         <Route path="/learn/tasks" element={<TaskList />} />
         <Route path="/learn/tasks/:taskId" element={<TaskDetail />} />
+        <Route path="/learn/activities" element={<ActivitiesPage />} />
+        <Route path="/learn/activities/:activityId" element={<ActivityPage />} />
         <Route path="/learn/progress" element={<ProgressPage />} />
         <Route path="/learn/board" element={<LeaderboardPage />} />
         <Route path="/learn/notices" element={<NoticesPage />} />

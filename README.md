@@ -9,6 +9,7 @@ EcoQuest is a web MVP for environmental learning and student activities. The rep
 - Lessons and quizzes; tasks, submissions and review; points ledger, badges, challenges, leaderboard, notices; schools/classes and account administration.
 - JPEG, PNG, and WebP evidence uploads up to 5 MB. Local disk storage is the default; Cloudinary signing is available when configured.
 - Demo seed data and a scoring unit test. Production privacy/consent, deployment, and crop-advisor scope are not approved.
+- Four browser-based interactive learning activities with server-persisted completion status; they do not grant points.
 
 ## Repository layout
 

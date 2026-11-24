@@ -60,5 +60,7 @@ Each entry includes method, URL, purpose, auth/role, representative request/resp
 | Leaderboard | GET `/leaderboard` | View approved ranking; auth | `?schoolId&period&cursor&limit` → `{items:[{rank,displayName,points}]}` | 401,403,422 |
 | Notifications | GET `/notifications` | Own notices; auth | `?unread&cursor&limit` → `{items,nextCursor}` | 401,422 |
 | Notifications | PATCH `/notifications/:id/read` | Mark own read; auth | `{}` → `{id,readAt}` | 401,404 |
+| Activities | GET `/activities/progress` | Read own interactive-activity completions; student | → `{items:[{activityId,completedAt}]}` | 401,403 |
+| Activities | POST `/activities/:activityId/completion` | Save completion once; student; allowed IDs: `garden-explorer`, `sort-the-garden`, `cleanup-rush`, `learning-garden-agent` | → `{activityId,completedAt}` | 401,403,422 |
 
 Do not expose password hashes, reset-token hashes, answer keys before submission, private student data, provider secrets, or another user's records. Password reset tokens expire after 30 minutes, work once, and invalidate prior sessions; only development responses include the raw local reset link. Account deletion removes direct identifiers, authored-content attribution, and uploaded evidence but retains pseudonymous quiz, point-ledger, and audit history; retention duration and backup expiry remain policy decisions. Quiz edits are rejected after the first attempt to preserve recorded score meaning. Use idempotency for awards/reviews. Update this contract when API changes.

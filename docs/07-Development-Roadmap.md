@@ -31,6 +31,7 @@ Roadmap state reflects the repository as inspected on 2026-11-15. Statuses descr
 - Admins can edit school names and regions; updates are audited.
 - Users can opt out of new in-app notices from their profile; existing notices remain available.
 - Teachers can set task start/due dates at creation and edit time; the API enforces date ordering.
+- Students can launch four browser-based interactive activities: garden scene with viewpoint controls, garden sorting, timed cleanup, and a Q-learning demonstration. Completion is recorded idempotently without granting points.
 
 ## Phase 5 – Integrated journeys
 - **Status: IMPLEMENTED IN CODE; NOT VERIFIED END TO END.** Client calls the API for registration/login, learning, quiz attempts, submissions/evidence, review, awards, and notices.

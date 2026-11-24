@@ -85,6 +85,11 @@ export function LessonDetail() {
           <p className="kicker">Lesson</p>
           <h1>{data.title}</h1>
           {data.body.split('\n\n').map((paragraph) => <p key={paragraph.slice(0, 24)}>{paragraph}</p>)}
+          <section className="card activity-callout">
+            <h2>Try an interactive activity</h2>
+            <p>Explore a garden scene, sort materials, play a cleanup game, or see a learning agent improve.</p>
+            <Link className="button" to="/learn/activities">Explore activities</Link>
+          </section>
           {data.quizzes.length > 0 && (
             <div className="card">
               <h2>Check your understanding</h2>

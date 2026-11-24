@@ -44,7 +44,7 @@ const attemptBody = z.object({
   answers: z.array(z.object({
     questionId: z.string().uuid(),
     optionId: z.string().uuid(),
-  })).min(1),
+  })).min(1).max(20),
 }).superRefine((body, ctx) => {
   const questionIds = body.answers.map((answer) => answer.questionId);
   if (new Set(questionIds).size !== questionIds.length) {

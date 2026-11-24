@@ -1,6 +1,6 @@
 # 8. Testing and Deployment
 
-The API includes a Node.js test for scoring. Prisma schema validation, migration/seed on a disposable database, and the frontend production build passed during this implementation pass; the automated test suite was not run. Expand coverage to the acceptance criteria below before release; passing status is not claimed.
+The API includes a Node.js scoring test suite. On 2026-11-24, all four existing tests passed, the frontend production build passed, Prisma schema validation passed, and all four checked-in migrations (including activity completion) were applied successfully to the verified-empty local development database. The live API health endpoint returned 200 with the database up, and the unauthenticated activity-progress endpoint returned 401. No full authenticated browser-to-database journey was run.
 
 ## Test strategy
 | Type | Required focus |
